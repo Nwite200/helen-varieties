@@ -113,3 +113,4 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   welcomeMessage: `Hello and welcome to Helen's Varieties Venture! 💙\n\nWe help you discover and pre-order quality products from 1688, China, and other trusted suppliers.\n\nI'm your AI shopping assistant, and I'm here to help you find products, check prices, understand the pre-order process, and get assistance with your order.\n\nWhat would you like to do today?\n1. Browse products\n2. Find a product\n3. Make a pre-order\n4. Check my order\n5. Understand shipping and delivery\n6. Speak with customer support\n\nSimply type what you need, and I'll guide you.`,
   disclaimer: `Product prices do not include international shipping, customs charges, or other applicable delivery fees unless explicitly stated. Additional charges will be communicated according to the order's sourcing and delivery arrangements.`
 };
+

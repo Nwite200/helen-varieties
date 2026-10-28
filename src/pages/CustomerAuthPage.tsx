@@ -280,3 +280,4 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
     </div>
   );
 };
+

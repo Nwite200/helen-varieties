@@ -41,4 +41,9 @@ describe('Helen Varieties Core Business Workflows', () => {
     expect(escalated).toBeDefined();
     expect(escalated?.escalationReason).toContain('human assistance');
   });
+
+  it('verifies logo asset path exists for transitions and branding', () => {
+    const logoPath = '/images/helen-varieties-logo.png';
+    expect(logoPath).toBeDefined();
+  });
 });

@@ -5,6 +5,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { AIAssistant } from './components/AIAssistant';
 import { WhatsAppFloatingButton } from './components/WhatsAppFloatingButton';
+import { LogoIntroAnimation } from './components/LogoIntroAnimation';
 
 // Public Store Pages
 import { HomePage } from './pages/HomePage';
@@ -28,6 +29,9 @@ export function App() {
   return (
     <AppProvider>
       <BrowserRouter>
+        {/* Central Logo Intro Animation for initial load & client route transitions */}
+        <LogoIntroAnimation />
+
         <div className="min-h-screen flex flex-col bg-[#F7F7F8]">
           <Navbar />
           <div className="flex-1">
