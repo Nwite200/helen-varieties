@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logoImg from '../assets/helen-varieties-logo.png';
 
 interface LogoProps {
   className?: string;
@@ -26,11 +27,12 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <Link to="/" className={`inline-flex items-center gap-2.5 group select-none ${className}`}>
       {/* Official Helen's Varieties Brand Icon from Image Asset */}
-      <div className={`relative ${dimensions.img} flex-shrink-0 rounded-xl overflow-hidden bg-white shadow-xs transition-transform duration-200 group-hover:scale-105 flex items-center justify-center`}>
+      <div className={`relative ${dimensions.img} flex-shrink-0 rounded-xl overflow-hidden bg-white shadow-xs transition-transform duration-200 group-hover:scale-105 flex items-center justify-center border border-slate-100`}>
         <img
-          src="/images/helen-varieties-logo.png"
+          src={logoImg}
           alt="Helen Varieties Venture Logo"
           className="w-full h-full object-contain"
+          loading="eager"
         />
       </div>
 
