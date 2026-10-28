@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, CATEGORIES } from './mockData';
+import { DEFAULT_WHATSAPP_CONFIG, INITIAL_WHATSAPP_CONVERSATIONS } from './whatsappData';
 
 describe('Helen Varieties Core Business Workflows', () => {
   it('loads valid initial products from 1688 and international suppliers', () => {
@@ -27,5 +28,17 @@ describe('Helen Varieties Core Business Workflows', () => {
     expect(demoOrder.shippingNote).toContain('Not included');
     expect(demoOrder.sourcingNotes?.length).toBeGreaterThan(0);
   });
-});
 
+  it('configures WhatsApp AI shopping agent for 07032583937', () => {
+    expect(DEFAULT_WHATSAPP_CONFIG.phoneNumber).toBe('07032583937');
+    expect(DEFAULT_WHATSAPP_CONFIG.internationalNumber).toBe('2347032583937');
+    expect(DEFAULT_WHATSAPP_CONFIG.welcomeMessage).toContain("Hello and welcome to Helen's Varieties Venture!");
+    expect(DEFAULT_WHATSAPP_CONFIG.disclaimer).toContain('Product prices do not include international shipping');
+  });
+
+  it('supports WhatsApp human escalation handover', () => {
+    const escalated = INITIAL_WHATSAPP_CONVERSATIONS.find(c => c.escalatedToHuman);
+    expect(escalated).toBeDefined();
+    expect(escalated?.escalationReason).toContain('human assistance');
+  });
+});

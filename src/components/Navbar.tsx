@@ -21,7 +21,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../mockData';
 
 export const Navbar: React.FC = () => {
-  const { cart, wishlist, user, logout } = useApp();
+  const { cart, wishlist, user, customerLogout } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -207,7 +207,7 @@ export const Navbar: React.FC = () => {
                         )}
                         <button
                           onClick={() => {
-                            logout();
+                            customerLogout();
                             setIsUserDropdownOpen(false);
                           }}
                           className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg font-semibold"

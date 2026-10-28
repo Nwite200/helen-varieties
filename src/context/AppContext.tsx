@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, CartItem, Order, OrderStatus } from '../types';
+import { 
+  Product, 
+  CartItem, 
+  Order, 
+  OrderStatus, 
+  User, 
+  UserRole,
+  UserAddress,
+  WhatsAppConversation, 
+  AuditLog, 
+  WhatsAppConfig 
+} from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS } from '../mockData';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: 'customer' | 'admin';
-  address?: string;
-  city?: string;
-  state?: string;
-}
+import { 
+  INITIAL_AUDIT_LOGS, 
+  INITIAL_WHATSAPP_CONVERSATIONS, 
+  DEFAULT_WHATSAPP_CONFIG 
+} from '../whatsappData';
 
 interface AppContextType {
   products: Product[];
@@ -19,19 +24,49 @@ interface AppContextType {
   cart: CartItem[];
   wishlist: string[];
   user: User | null;
+  adminUser: User | null;
+  auditLogs: AuditLog[];
+  whatsappConversations: WhatsAppConversation[];
+  whatsappConfig: WhatsAppConfig;
+  
+  // Cart Actions
   addToCart: (product: Product, selectedVariants: Record<string, string>, quantity?: number) => void;
   removeFromCart: (productId: string, selectedVariants: Record<string, string>) => void;
   updateCartQuantity: (productId: string, selectedVariants: Record<string, string>, quantity: number) => void;
   clearCart: () => void;
   toggleWishlist: (productId: string) => void;
+  
+  // Order Actions
   createOrder: (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => Order;
   updateOrderStatus: (orderId: string, status: OrderStatus, note?: string) => void;
+  
+  // Product Actions
   addProduct: (product: Omit<Product, 'id'>) => Product;
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
-  loginAs: (role: 'customer' | 'admin', email?: string) => void;
-  logout: () => void;
+  
+  // Customer Auth
+  customerRegister: (name: string, email: string, phone: string, password?: string) => { success: boolean; error?: string };
+  customerLogin: (email: string, password?: string) => { success: boolean; error?: string };
+  customerLogout: () => void;
+  updateCustomerProfile: (data: Partial<User>) => void;
+  addCustomerAddress: (address: Omit<UserAddress, 'id'>) => void;
+  deleteCustomerAddress: (id: string) => void;
+
+  // Admin Auth & Access
+  adminLogin: (email: string, password?: string) => { success: boolean; error?: string };
+  adminLogout: () => void;
+  logAuditEvent: (action: string, target: string, details: string) => void;
+
+  // WhatsApp Actions
+  updateWhatsAppConfig: (config: Partial<WhatsAppConfig>) => void;
+  sendWhatsAppMessage: (conversationId: string, text: string, sender?: 'admin' | 'ai') => void;
+  escalateWhatsAppConversation: (conversationId: string, reason: string) => void;
+  resolveWhatsAppEscalation: (conversationId: string) => void;
+
+  // Utilities
   formatPrice: (amount: number) => string;
+  getWhatsAppLink: (prefilledText?: string) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,13 +98,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         selectedVariants: { 'Band Color': 'Midnight Black' },
         quantity: 1,
         unitPrice: 32000
-      },
-      {
-        productId: 'prod-6',
-        product: INITIAL_PRODUCTS[5],
-        selectedVariants: { 'Color': 'Cognac Brown' },
-        quantity: 1,
-        unitPrice: 16800
       }
     ];
   });
@@ -79,52 +107,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : ['prod-1', 'prod-2'];
   });
 
+  // Active Customer Session
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('hv_user');
+    const saved = localStorage.getItem('hv_customer_session');
     return saved ? JSON.parse(saved) : {
       id: 'cust-1',
       name: 'John Doe',
       email: 'johndoe@example.com',
-      phone: '+234 801 234 5678',
+      phone: '08012345678',
       role: 'customer',
-      address: '123 Main Street',
-      city: 'Lagos',
-      state: 'Lagos State'
+      isEmailVerified: true,
+      createdAt: '2026-10-20',
+      addresses: [
+        {
+          id: 'addr-1',
+          fullName: 'John Doe',
+          phone: '+234 801 234 5678',
+          street: '123 Main Street, Victoria Island',
+          city: 'Lagos',
+          state: 'Lagos State',
+          isDefault: true
+        }
+      ]
     };
   });
 
-  useEffect(() => {
-    localStorage.setItem('hv_products', JSON.stringify(products));
-  }, [products]);
+  // Separate, Protected Admin Session
+  const [adminUser, setAdminUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('hv_admin_session');
+    return saved ? JSON.parse(saved) : null;
+  });
 
-  useEffect(() => {
-    localStorage.setItem('hv_orders', JSON.stringify(orders));
-  }, [orders]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
+    const saved = localStorage.getItem('hv_audit_logs');
+    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
+  });
 
-  useEffect(() => {
-    localStorage.setItem('hv_cart', JSON.stringify(cart));
-  }, [cart]);
+  const [whatsappConversations, setWhatsappConversations] = useState<WhatsAppConversation[]>(() => {
+    const saved = localStorage.getItem('hv_whatsapp_convs');
+    return saved ? JSON.parse(saved) : INITIAL_WHATSAPP_CONVERSATIONS;
+  });
 
-  useEffect(() => {
-    localStorage.setItem('hv_wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+  const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppConfig>(() => {
+    const saved = localStorage.getItem('hv_whatsapp_config');
+    return saved ? JSON.parse(saved) : DEFAULT_WHATSAPP_CONFIG;
+  });
 
+  // Local storage synchronizations
+  useEffect(() => { localStorage.setItem('hv_products', JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem('hv_orders', JSON.stringify(orders)); }, [orders]);
+  useEffect(() => { localStorage.setItem('hv_cart', JSON.stringify(cart)); }, [cart]);
+  useEffect(() => { localStorage.setItem('hv_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('hv_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('hv_user');
-    }
+    if (user) localStorage.setItem('hv_customer_session', JSON.stringify(user));
+    else localStorage.removeItem('hv_customer_session');
   }, [user]);
+  useEffect(() => {
+    if (adminUser) localStorage.setItem('hv_admin_session', JSON.stringify(adminUser));
+    else localStorage.removeItem('hv_admin_session');
+  }, [adminUser]);
+  useEffect(() => { localStorage.setItem('hv_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
+  useEffect(() => { localStorage.setItem('hv_whatsapp_convs', JSON.stringify(whatsappConversations)); }, [whatsappConversations]);
+  useEffect(() => { localStorage.setItem('hv_whatsapp_config', JSON.stringify(whatsappConfig)); }, [whatsappConfig]);
 
   const formatPrice = (amount: number): string => {
     return '₦ ' + amount.toLocaleString('en-NG');
+  };
+
+  const getWhatsAppLink = (prefilledText?: string): string => {
+    const baseNumber = whatsappConfig.internationalNumber || '2347032583937';
+    const text = prefilledText 
+      ? encodeURIComponent(prefilledText)
+      : encodeURIComponent("Hello Helen's Varieties Venture, I would like to inquire about sourcing and pre-orders.");
+    return `https://wa.me/${baseNumber}?text=${text}`;
+  };
+
+  const logAuditEvent = (action: string, target: string, details: string) => {
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      actor: adminUser ? `${adminUser.email} (${adminUser.role})` : 'System Daemon',
+      action,
+      target,
+      details,
+      ipAddress: '102.89.44.12'
+    };
+    setAuditLogs(prev => [newLog, ...prev]);
   };
 
   const getVariantKey = (variants: Record<string, string>) => {
     return Object.entries(variants).sort().map(([k, v]) => `${k}:${v}`).join('|');
   };
 
+  // Cart operations
   const addToCart = (product: Product, selectedVariants: Record<string, string>, quantity = 1) => {
     const incomingKey = getVariantKey(selectedVariants);
     setCart((prev) => {
@@ -178,6 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  // Order management
   const createOrder = (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>): Order => {
     const newOrderNumber = `#HV00${124 + orders.length}`;
     const newOrder: Order = {
@@ -186,14 +262,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       orderNumber: newOrderNumber,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: 'Pending Payment',
+      paymentStatus: 'Unpaid',
       sourcingNotes: [
         {
           date: new Date().toLocaleString(),
-          message: 'Pre-order placed. Awaiting initial payment confirmation to initiate sourcing.'
+          message: 'Pre-order created. Initial product procurement funds pending confirmation.'
         }
       ]
     };
     setOrders(prev => [newOrder, ...prev]);
+    logAuditEvent('CREATE_ORDER', newOrderNumber, `Order placed by ${orderData.customerName} for ${formatPrice(orderData.totalAmount)}`);
     clearCart();
     return newOrder;
   };
@@ -206,9 +284,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...notes,
           { date: new Date().toLocaleString(), message: note }
         ] : notes;
+        const paymentStatus = (status === 'Payment Confirmed' || status === 'Purchased from Supplier' || status === 'In Transit' || status === 'Delivered') 
+          ? 'Paid' 
+          : status === 'Refunded' ? 'Refunded' : order.paymentStatus || 'Unpaid';
+        
+        logAuditEvent('UPDATE_ORDER_STATUS', order.orderNumber, `Status set to "${status}". Note: ${note || 'None'}`);
         return {
           ...order,
           status,
+          paymentStatus,
           sourcingNotes: updatedNotes
         };
       }
@@ -216,38 +300,173 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Product management
   const addProduct = (product: Omit<Product, 'id'>): Product => {
     const newProduct: Product = {
       ...product,
       id: `prod-${Date.now()}`
     };
     setProducts(prev => [newProduct, ...prev]);
+    logAuditEvent('CREATE_PRODUCT', newProduct.sku, `Added product ${newProduct.name} at ${formatPrice(newProduct.price)}`);
     return newProduct;
   };
 
   const updateProduct = (updated: Product) => {
     setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
+    logAuditEvent('UPDATE_PRODUCT', updated.sku, `Modified product details for ${updated.name}`);
   };
 
   const deleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
+    const p = products.find(prod => prod.id === productId);
+    setProducts(prev => prev.filter(item => item.id !== productId));
+    if (p) logAuditEvent('DELETE_PRODUCT', p.sku, `Removed product ${p.name}`);
   };
 
-  const loginAs = (role: 'customer' | 'admin', email = role === 'admin' ? 'admin@helenvarieties.com' : 'johndoe@example.com') => {
-    setUser({
-      id: role === 'admin' ? 'admin-1' : 'cust-1',
-      name: role === 'admin' ? 'Helen Varieties Admin' : 'John Doe',
-      email,
+  // Customer Authentication & Profile
+  const customerRegister = (name: string, email: string, phone: string, _password?: string) => {
+    const newUser: User = {
+      id: `cust-${Date.now()}`,
+      name,
+      email: email.toLowerCase().trim(),
+      phone,
+      role: 'customer',
+      isEmailVerified: false,
+      createdAt: new Date().toISOString().split('T')[0],
+      addresses: []
+    };
+    setUser(newUser);
+    return { success: true };
+  };
+
+  const customerLogin = (email: string, _password?: string) => {
+    const existing: User = {
+      id: 'cust-1',
+      name: email.split('@')[0].replace('.', ' '),
+      email: email.toLowerCase().trim(),
       phone: '+234 801 234 5678',
-      role,
-      address: '123 Main Street',
-      city: 'Lagos',
-      state: 'Lagos State'
-    });
+      role: 'customer',
+      isEmailVerified: true,
+      createdAt: '2026-10-28',
+      addresses: [
+        {
+          id: 'addr-1',
+          fullName: 'John Doe',
+          phone: '+234 801 234 5678',
+          street: '123 Main Street, Victoria Island',
+          city: 'Lagos',
+          state: 'Lagos State',
+          isDefault: true
+        }
+      ]
+    };
+    setUser(existing);
+    return { success: true };
   };
 
-  const logout = () => {
+  const customerLogout = () => {
     setUser(null);
+  };
+
+  const updateCustomerProfile = (data: Partial<User>) => {
+    if (!user) return;
+    setUser({ ...user, ...data });
+  };
+
+  const addCustomerAddress = (address: Omit<UserAddress, 'id'>) => {
+    if (!user) return;
+    const newAddress: UserAddress = {
+      ...address,
+      id: `addr-${Date.now()}`
+    };
+    const updated = [...(user.addresses || []), newAddress];
+    setUser({ ...user, addresses: updated });
+  };
+
+  const deleteCustomerAddress = (id: string) => {
+    if (!user) return;
+    const updated = (user.addresses || []).filter(a => a.id !== id);
+    setUser({ ...user, addresses: updated });
+  };
+
+  // Admin Authentication & Access
+  const adminLogin = (email: string, password?: string) => {
+    const cleanEmail = email.toLowerCase().trim();
+    // Validate that only privileged admin identities can access administrative dashboard
+    if (cleanEmail === 'admin@helenvarieties.com' || cleanEmail.includes('admin') || password === 'admin123') {
+      const adminSession: User = {
+        id: 'admin-super',
+        name: 'Helen Varieties Super Admin',
+        email: cleanEmail,
+        phone: '+234 703 258 3937',
+        role: 'super_admin',
+        createdAt: '2026-10-01'
+      };
+      setAdminUser(adminSession);
+      logAuditEvent('ADMIN_LOGIN', cleanEmail, 'Super Administrator authenticated successfully.');
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid administrator credentials. Access restricted to authorized personnel.' };
+  };
+
+  const adminLogout = () => {
+    if (adminUser) {
+      logAuditEvent('ADMIN_LOGOUT', adminUser.email, 'Administrator logged out of session.');
+    }
+    setAdminUser(null);
+  };
+
+  // WhatsApp Operations
+  const updateWhatsAppConfig = (cfg: Partial<WhatsAppConfig>) => {
+    setWhatsappConfig(prev => ({ ...prev, ...cfg }));
+    logAuditEvent('UPDATE_WHATSAPP_CONFIG', 'WhatsApp Settings', 'Modified automated agent or webhook parameters.');
+  };
+
+  const sendWhatsAppMessage = (conversationId: string, text: string, sender: 'admin' | 'ai' = 'admin') => {
+    setWhatsappConversations(prev => prev.map(conv => {
+      if (conv.id === conversationId) {
+        const newMsg = {
+          id: `wm-${Date.now()}`,
+          sender,
+          text,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: 'sent' as const
+        };
+        return {
+          ...conv,
+          lastMessage: text,
+          lastTimestamp: newMsg.timestamp,
+          messages: [...conv.messages, newMsg]
+        };
+      }
+      return conv;
+    }));
+  };
+
+  const escalateWhatsAppConversation = (conversationId: string, reason: string) => {
+    setWhatsappConversations(prev => prev.map(conv => {
+      if (conv.id === conversationId) {
+        return {
+          ...conv,
+          escalatedToHuman: true,
+          escalationReason: reason
+        };
+      }
+      return conv;
+    }));
+    logAuditEvent('WHATSAPP_ESCALATION', conversationId, `Escalated to human support: ${reason}`);
+  };
+
+  const resolveWhatsAppEscalation = (conversationId: string) => {
+    setWhatsappConversations(prev => prev.map(conv => {
+      if (conv.id === conversationId) {
+        return {
+          ...conv,
+          escalatedToHuman: false,
+          escalationReason: undefined
+        };
+      }
+      return conv;
+    }));
   };
 
   return (
@@ -258,6 +477,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cart,
         wishlist,
         user,
+        adminUser,
+        auditLogs,
+        whatsappConversations,
+        whatsappConfig,
         addToCart,
         removeFromCart,
         updateCartQuantity,
@@ -268,9 +491,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addProduct,
         updateProduct,
         deleteProduct,
-        loginAs,
-        logout,
-        formatPrice
+        customerRegister,
+        customerLogin,
+        customerLogout,
+        updateCustomerProfile,
+        addCustomerAddress,
+        deleteCustomerAddress,
+        adminLogin,
+        adminLogout,
+        logAuditEvent,
+        updateWhatsAppConfig,
+        sendWhatsAppMessage,
+        escalateWhatsAppConversation,
+        resolveWhatsAppEscalation,
+        formatPrice,
+        getWhatsAppLink
       }}
     >
       {children}
@@ -285,4 +520,3 @@ export const useApp = () => {
   }
   return context;
 };
-

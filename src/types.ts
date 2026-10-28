@@ -1,7 +1,7 @@
 export interface ProductVariant {
   id: string;
-  name: string; // e.g., "Color" or "Storage"
-  value: string; // e.g., "White", "Black", "256GB"
+  name: string;
+  value: string;
   sku?: string;
   additionalPrice?: number;
 }
@@ -20,6 +20,30 @@ export type OrderStatus =
   | 'Cancelled'
   | 'Refund Requested'
   | 'Refunded';
+
+export type UserRole = 'customer' | 'admin' | 'super_admin' | 'product_manager' | 'order_manager';
+
+export interface UserAddress {
+  id: string;
+  fullName: string;
+  phone: string;
+  street: string;
+  city: string;
+  state: string;
+  isDefault?: boolean;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  isEmailVerified?: boolean;
+  avatarUrl?: string;
+  addresses?: UserAddress[];
+  createdAt: string;
+}
 
 export interface Product {
   id: string;
@@ -46,6 +70,7 @@ export interface Product {
   supplierInfo?: string;
   minOrderQuantity?: number;
   keywords?: string[];
+  inStock?: boolean;
 }
 
 export interface CartItem {
@@ -90,6 +115,8 @@ export interface Order {
   status: OrderStatus;
   paymentMethod: string;
   paymentReference?: string;
+  paymentStatus?: 'Unpaid' | 'Paid' | 'Refunded';
+  source?: 'website' | 'whatsapp';
   sourcingNotes?: {
     date: string;
     message: string;
@@ -104,3 +131,47 @@ export interface Category {
   itemCount?: number;
 }
 
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  actor: string;
+  action: string;
+  target: string;
+  details: string;
+  ipAddress?: string;
+}
+
+export interface WhatsAppMessage {
+  id: string;
+  sender: 'customer' | 'ai' | 'admin';
+  text: string;
+  timestamp: string;
+  status?: 'sent' | 'delivered' | 'read' | 'failed';
+  mediaUrl?: string;
+  mediaType?: 'text' | 'voice' | 'image';
+}
+
+export interface WhatsAppConversation {
+  id: string;
+  customerPhone: string;
+  customerName: string;
+  lastMessage: string;
+  lastTimestamp: string;
+  unreadCount: number;
+  escalatedToHuman: boolean;
+  escalationReason?: string;
+  associatedOrderNumber?: string;
+  messages: WhatsAppMessage[];
+}
+
+export interface WhatsAppConfig {
+  phoneNumber: string; // e.g. 07032583937
+  internationalNumber: string; // 2347032583937
+  provider: 'meta_cloud_api' | 'twilio' | 'unconfigured';
+  isConnected: boolean;
+  webhookStatus: 'verified' | 'unverified' | 'disabled';
+  aiAgentEnabled: boolean;
+  voiceNoteEnabled: boolean;
+  welcomeMessage: string;
+  disclaimer: string;
+}

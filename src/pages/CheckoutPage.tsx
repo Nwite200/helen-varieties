@@ -21,12 +21,13 @@ export const CheckoutPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form states
+  const defaultAddress = user?.addresses && user.addresses.length > 0 ? user.addresses[0] : null;
   const [fullName, setFullName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [address, setAddress] = useState(user?.address || '');
-  const [city, setCity] = useState(user?.city || 'Lagos');
-  const [state, setState] = useState(user?.state || 'Lagos State');
+  const [address, setAddress] = useState(defaultAddress?.street || '');
+  const [city, setCity] = useState(defaultAddress?.city || 'Lagos');
+  const [state, setState] = useState(defaultAddress?.state || 'Lagos State');
   const [selectedPayment, setSelectedPayment] = useState<'paystack' | 'flutterwave' | 'bank_transfer'>('paystack');
   const [agreeDisclaimer, setAgreeDisclaimer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
