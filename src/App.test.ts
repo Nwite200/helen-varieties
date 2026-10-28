@@ -42,8 +42,10 @@ describe('Helen Varieties Core Business Workflows', () => {
     expect(escalated?.escalationReason).toContain('human assistance');
   });
 
-  it('verifies logo asset path exists for transitions and branding', () => {
+  it('verifies logo and jazz audio track presence in public directory', () => {
     const logoPath = '/images/helen-varieties-logo.png';
+    const jazzPath = '/audio/gentle-lounge-jazz.wav';
     expect(logoPath).toBeDefined();
+    expect(jazzPath).toBeDefined();
   });
 });
