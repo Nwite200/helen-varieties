@@ -1,0 +1,20 @@
+name = "helens-varieties-api"
+main = "functions/api/index.ts"
+compatibility_date = "2024-09-23"
+
+# Cloudflare D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "helens-varieties-db"
+database_id = "local-d1-helen-varieties"
+
+# Cloudflare R2 Storage Binding for Product Media
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "helens-varieties-media"
+
+[vars]
+WHATSAPP_PHONE = "07032583937"
+WHATSAPP_INTERNATIONAL = "2347032583937"
+BRAND_NAME = "Helen's Varieties Venture"
+

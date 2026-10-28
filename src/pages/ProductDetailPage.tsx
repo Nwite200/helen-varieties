@@ -14,9 +14,11 @@ import {
   Package,
   Layers,
   ChevronRight,
-  Info
+  Info,
+  MessageCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { buildProductWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -234,6 +236,20 @@ export const ProductDetailPage: React.FC = () => {
               <Package className="w-4 h-4" /> Pre-Order Now ({formatPrice(product.price * quantity)})
             </button>
 
+            <a
+              href={
+                (() => {
+                  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+                  const text = buildProductWhatsAppMessage({ product, selectedVariants, quantity, baseUrl });
+                  return `${WHATSAPP_URL}?text=${encodeURIComponent(text)}`;
+                })()
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 active:scale-[0.98]"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-white" /> Order on WhatsApp
+            </a>
             <button
               onClick={handleBuyNow}
               className="w-full py-3 bg-[#191919] hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition"

@@ -9,9 +9,11 @@ import {
   Info, 
   ShieldCheck, 
   AlertTriangle,
-  ArrowLeft
+  ArrowLeft,
+  MessageCircle
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { buildCartWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages';
 
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, formatPrice } = useApp();
@@ -220,6 +222,25 @@ export const CartPage: React.FC = () => {
           >
             Proceed to Checkout <ArrowRight className="w-4 h-4" />
           </button>
+
+          {/* WhatsApp ordering — opens a conversation; does not submit or confirm an order */}
+          <a
+            href={
+              (() => {
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+                const text = buildCartWhatsAppMessage({ cartItems: cart, baseUrl });
+                return `${WHATSAPP_URL}?text=${encodeURIComponent(text)}`;
+              })()
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 bg-[#10B981] hover:bg-[#059669] text-white font-extrabold text-sm rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4 fill-white" /> Continue Order on WhatsApp
+          </a>
+          <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+            WhatsApp enquiries are confirmed manually by our team; product prices exclude shipping unless explicitly stated.
+          </p>
 
           <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />

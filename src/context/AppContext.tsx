@@ -9,13 +9,15 @@ import {
   UserAddress,
   WhatsAppConversation, 
   AuditLog, 
-  WhatsAppConfig 
+  WhatsAppConfig,
+  AIAssistantConfig
 } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS } from '../mockData';
 import { 
   INITIAL_AUDIT_LOGS, 
   INITIAL_WHATSAPP_CONVERSATIONS, 
-  DEFAULT_WHATSAPP_CONFIG 
+  DEFAULT_WHATSAPP_CONFIG,
+  DEFAULT_AI_CONFIG
 } from '../whatsappData';
 
 interface AppContextType {
@@ -64,6 +66,10 @@ interface AppContextType {
   escalateWhatsAppConversation: (conversationId: string, reason: string) => void;
   resolveWhatsAppEscalation: (conversationId: string) => void;
 
+  // AI Assistant Configuration (admin only)
+  aiConfig: AIAssistantConfig;
+  updateAiConfig: (config: Partial<AIAssistantConfig>) => void;
+
   // Utilities
   formatPrice: (amount: number) => string;
   getWhatsAppLink: (prefilledText?: string) => string;
@@ -81,6 +87,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('hv_orders');
     return saved ? JSON.parse(saved) : INITIAL_ORDERS;
   });
+
+  const [aiConfig, setAiConfig] = useState<AIAssistantConfig>(() => {
+    const saved = localStorage.getItem('hv_ai_config');
+    return saved ? { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) } : DEFAULT_AI_CONFIG;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hv_ai_config', JSON.stringify(aiConfig));
+  }, [aiConfig]);
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('hv_cart');
@@ -421,6 +436,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logAuditEvent('UPDATE_WHATSAPP_CONFIG', 'WhatsApp Settings', 'Modified automated agent or webhook parameters.');
   };
 
+  const updateAiConfig = (config: Partial<AIAssistantConfig>) => {
+    setAiConfig(prev => ({ ...prev, ...config, updatedAt: new Date().toISOString() }));
+    logAuditEvent('UPDATE_AI_ASSISTANT_CONFIG', 'AI Assistant Settings', 'Assistant configuration updated by administrator.');
+  };
+
   const sendWhatsAppMessage = (conversationId: string, text: string, sender: 'admin' | 'ai' = 'admin') => {
     setWhatsappConversations(prev => prev.map(conv => {
       if (conv.id === conversationId) {
@@ -504,6 +524,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sendWhatsAppMessage,
         escalateWhatsAppConversation,
         resolveWhatsAppEscalation,
+        aiConfig,
+        updateAiConfig,
         formatPrice,
         getWhatsAppLink
       }}

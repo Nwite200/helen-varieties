@@ -1,25 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Bot, 
-  X, 
-  Send, 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX, 
-  Music, 
-  Sparkles, 
-  Play, 
-  Pause, 
-  ChevronRight, 
-  ShoppingBag, 
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Bot,
+  X,
+  Send,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  ChevronRight,
+  ShoppingBag,
+  Clock,
+  Phone,
+  MessageCircle,
+  Sliders,
+  AlertCircle,
   Headphones,
-  RotateCcw,
-  Sliders
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { useJazzAudio } from '../context/JazzAudioContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useAssistantAudio } from '../context/AssistantAudioContext';
+import { generateAIReply, SHIPPING_DISCLAIMER } from '../lib/aiResponses';
+import { buildProductWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages';
 
 interface Message {
   id: string;
@@ -27,553 +30,546 @@ interface Message {
   text: string;
   links?: { text: string; url: string }[];
   time: string;
-  isSpoken?: boolean;
+  spoken?: boolean;
 }
 
+const WELCOME_STORAGE_KEY = 'hv_ai_welcome_dismissed';
+const WELCOME_DELAY_MS = 2000;
+
 export const AIAssistant: React.FC = () => {
-  const { products, orders, user, formatPrice, addToCart } = useApp();
-  const { 
-    isPlaying: jazzPlaying, 
-    isMuted: jazzMuted, 
-    volume: jazzVolume, 
-    isDucked, 
-    togglePlay: toggleJazz, 
-    toggleMute: toggleJazzMute, 
-    setVolume: setJazzVolume, 
-    setSpeechDucking 
-  } = useJazzAudio();
+  const { products, orders, cart, user, formatPrice, addToCart, getWhatsAppLink, aiConfig } = useApp();
+  const {
+    speak,
+    pause,
+    resume,
+    replay,
+    stop,
+    toggleMute,
+    isMuted,
+    voiceVolume,
+    setVoiceVolume,
+    isSpeaking,
+    isPaused,
+    toggleBackground,
+    isBackgroundEnabled,
+    backgroundVolume,
+    setBackgroundVolume,
+    backgroundSoundConfigured,
+    backgroundError,
+  } = useAssistantAudio();
 
-  const navigate = useNavigate();
-
-  // Assistant UI States
+  // UI state
   const [isOpen, setIsOpen] = useState(false);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [mode, setMode] = useState<'home' | 'chat'>('home');
   const [input, setInput] = useState('');
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const [showMusicControls, setShowMusicControls] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [typing, setTyping] = useState(false);
+  const [welcomeShown, setWelcomeShown] = useState(false);
+  const [welcomeVoiceEnabled, setWelcomeVoiceEnabled] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'm-welcome',
-      sender: 'ai',
-      text: "Hello and welcome to Helen's Varieties Venture! 💙\n\nI'm Helen, your voice-enabled AI shopping assistant. I can help you discover products, explain pre-orders from 1688 and global suppliers, track your orders, or guide you through checkout.\n\nTap the microphone to speak, or enable the soft jazz lounge music below for a relaxing shopping experience!",
-      time: 'Just now'
-    }
-  ]);
-
+  // Refs
+  const panelRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const speakingMsgRef = useRef<string | null>(null);
 
-  // Initialize Speech Recognition & Synthesis
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => {
-          setIsListening(true);
-        };
-
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setIsListening(false);
-          handleSend(transcript);
-        };
-
-        recognition.onerror = (event: any) => {
-          console.warn('Speech recognition error:', event.error);
-          setIsListening(false);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
-        recognitionRef.current = recognition;
-      } else {
-        setSpeechSupported(false);
-      }
-
-      if ('speechSynthesis' in window) {
-        synthRef.current = window.speechSynthesis;
-      }
-    }
-  }, []);
+  const timeNow = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   };
 
+  // --- Session-aware welcome card (shown once per session, not on every route change) ---
   useEffect(() => {
-    if (isOpen) {
+    if (!aiConfig.aiEnabled || aiConfig.greetingBehavior === 'none') return;
+    if (sessionStorage.getItem(WELCOME_STORAGE_KEY) === 'true') return;
+    const timer = setTimeout(() => setWelcomeShown(true), aiConfig.greetingBehavior === 'immediate' ? 0 : WELCOME_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [aiConfig.aiEnabled, aiConfig.greetingBehavior]);
+
+  const dismissWelcome = () => {
+    sessionStorage.setItem(WELCOME_STORAGE_KEY, 'true');
+    setWelcomeShown(false);
+    stop();
+  };
+
+  const openChat = () => {
+    dismissWelcome();
+    setIsOpen(true);
+    setMode('chat');
+  };
+
+  const addUserMessage = (text: string) => {
+    const msg: Message = { id: `u-${Date.now()}`, sender: 'user', text, time: timeNow() };
+    setMessages((prev) => [...prev, msg]);
+    return msg;
+  };
+
+  const addAiMessage = useCallback(
+    (text: string, links?: { text: string; url: string }[], speakIt = true) => {
+      const msg: Message = { id: `a-${Date.now()}`, sender: 'ai', text, time: timeNow(), links, spoken: speakIt && !isMuted };
+      setMessages((prev) => [...prev, msg]);
+      if (speakIt && !isMuted) {
+        speakingMsgRef.current = msg.id;
+        speak(text);
+      }
+      return msg;
+    },
+    [isMuted, speak]
+  );
+
+  const orderByNumber = (ref: string) => {
+    const norm = (s: string) => String(s).replace(/^#/, '');
+    return orders.find((o) => norm(o.orderNumber) === norm(ref) || norm(o.id) === norm(ref));
+  };
+
+  const handleSend = useCallback(
+    (text?: string) => {
+      const value = (text || input || '').trim();
+      if (!value) return;
+      setInput('');
+      addUserMessage(value);
+      setTyping(true);
       scrollToBottom();
-    }
-  }, [messages, isOpen]);
 
-  // Voice Speaking Function with Automatic Jazz Ducking Synchronization
-  const speakText = (text: string) => {
-    if (!synthRef.current || !isVoiceEnabled) return;
+      // Simulate thinking so the UI feels conversational, then answer from real catalogue data
+      const timer = setTimeout(() => {
+        setTyping(false);
+        const reply = generateAIReply({ message: value, products, cart, user, orderByNumber });
+        addAiMessage(reply.text, reply.links, true);
+        scrollToBottom();
+      }, 600);
+      return () => clearTimeout(timer);
+    },
+    [input, products, cart, user, addUserMessage, addAiMessage]
+  );
 
-    // Cancel ongoing speech
-    synthRef.current.cancel();
+  const handleQuickAction = useCallback(
+    (label: string) => {
+      const mapped: Record<string, string> = {
+        'Find a Product': 'Help me find a product in the catalogue',
+        'Browse Categories': 'Show me product categories',
+        'Help Me Pre-Order': 'How does pre-order work?',
+        'Track My Order': 'How do I track my order?',
+        'Explain Shipping': 'Explain shipping charges and delivery',
+        'Contact Support': 'I want to speak with human support on WhatsApp',
+      };
+      handleSend(mapped[label] || label);
+    },
+    [handleSend]
+  );
 
-    // Clean markdown/symbols for clean voice reading
-    const cleanText = text
-      .replace(/[•*#_`]/g, '')
-      .replace(/₦\s?([\d,]+)/g, '$1 Naira')
-      .replace(/https?:\/\/\S+/g, '');
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05;
-
-    // Pick warm natural English voice
-    const voices = synthRef.current.getVoices();
-    const naturalVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Victoria')) && v.lang.startsWith('en'));
-    if (naturalVoice) {
-      utterance.voice = naturalVoice;
-    }
-
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setSpeechDucking(true); // Automatically ducks jazz music down to 10-15%
-    };
-
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setSpeechDucking(false); // Smoothly restores music volume
-    };
-
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setSpeechDucking(false);
-    };
-
-    synthRef.current.speak(utterance);
+  const handleWhatsApp = (prefilled?: string) => {
+    const link = prefilled ? getWhatsAppLink(prefilled) : WHATSAPP_URL;
+    window.open(link, '_blank', 'noopener,noreferrer');
   };
 
-  const handleToggleVoice = () => {
-    const next = !isVoiceEnabled;
-    setIsVoiceEnabled(next);
-    if (!next && synthRef.current) {
-      synthRef.current.cancel();
-      setIsSpeaking(false);
-      setSpeechDucking(false);
-    } else if (next) {
-      // Natural spoken greeting on enabling voice
-      speakText("Voice enabled! I'm Helen, your AI shopping assistant. How may I help you today?");
-    }
+  const handleProductWhatsApp = (productId: string, selectedVariants: Record<string, string>, quantity: number) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const text = buildProductWhatsAppMessage({ product, selectedVariants, quantity, baseUrl });
+    handleWhatsApp(text);
   };
+
+  // Speech recognition (best effort, browser-native)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      recognitionRef.current = null;
+      handleSend(transcript);
+    };
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+    };
+    recognitionRef.current = recognition;
+    return () => {
+      try { recognition.abort(); } catch {}
+      recognitionRef.current = null;
+    };
+  }, [handleSend]);
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser. You can still type in the chat!');
+    if (!recognitionRef.current) return;
+    if ((recognitionRef.current as any)._listening) {
+      recognitionRef.current.abort();
+      (recognitionRef.current as any)._listening = false;
       return;
     }
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      // Pause speech if AI is currently talking before listening
-      if (synthRef.current) {
-        synthRef.current.cancel();
-        setIsSpeaking(false);
-        setSpeechDucking(false);
-      }
-      try {
-        recognitionRef.current.start();
-      } catch (err) {
-        console.warn('Recognition start error:', err);
-      }
-    }
+    (recognitionRef.current as any)._listening = true;
+    recognitionRef.current.start();
   };
 
-  // Natural query processing grounded on real product & order data
-  const handleSend = (textToSend?: string) => {
-    const query = (textToSend || input).trim();
-    if (!query) return;
-
-    const userMsg: Message = {
-      id: `u-${Date.now()}`,
-      sender: 'user',
-      text: query,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages(prev => [...prev, userMsg]);
-    if (!textToSend) setInput('');
-
-    setTimeout(() => {
-      let reply = "";
-      let links: { text: string; url: string }[] | undefined = undefined;
-
-      const lower = query.toLowerCase();
-
-      // Product recommendation queries
-      if (lower.includes('smart watch') || lower.includes('watch')) {
-        const item = products.find(p => p.sku === 'HV-SMW-002') || products[1];
-        reply = `We have the ${item.name} available for pre-order at ${formatPrice(item.price)}. It features an AMOLED display, heart rate and SpO2 tracking, and 7 days battery life. Would you like to view its details?`;
-        links = [{ text: `View ${item.name}`, url: `/product/${item.id}` }];
-      } else if (lower.includes('earbud') || lower.includes('headphone') || lower.includes('sound')) {
-        const item = products.find(p => p.sku === 'HV-WBR-001') || products[0];
-        reply = `Our top-rated audio pick is the ${item.name} at ${formatPrice(item.price)}. It features Active Noise Cancellation, Bluetooth 5.3, and up to 30 hours battery life with the charging case.`;
-        links = [{ text: `View ${item.name}`, url: `/product/${item.id}` }];
-      } else if (lower.includes('bag') || lower.includes('handbag')) {
-        const item = products.find(p => p.sku === 'HV-LHB-006') || products[5];
-        reply = `We source the ${item.name} at ${formatPrice(item.price)}. Crafted in luxury vegan leather with gold hardware and multiple interior compartments.`;
-        links = [{ text: `View ${item.name}`, url: `/product/${item.id}` }];
-      } else if (lower.includes('under') || lower.includes('below') || lower.includes('cheap') || lower.includes('budget')) {
-        const affordable = products.filter(p => p.price <= 20000).slice(0, 3);
-        const listText = affordable.map(p => `• ${p.name} (${formatPrice(p.price)})`).join('\n');
-        reply = `Here are verified quality sourcing options under ₦20,000:\n${listText}\n\nNotice: Product prices exclude international shipping and customs clearing, which are communicated upon arrival in Lagos.`;
-        links = [{ text: 'Explore All Products', url: '/shop' }];
-      } else if (lower.includes('track') || lower.includes('order status') || lower.includes('where is my order')) {
-        if (user) {
-          const userOrders = orders.filter(o => o.customerEmail === user.email);
-          if (userOrders.length > 0) {
-            const latest = userOrders[0];
-            reply = `Hello ${user.name}! Your order ${latest.orderNumber} is currently: ${latest.status}. Items: ${latest.items[0]?.productName}.`;
-            links = [{ text: 'View Order in Dashboard', url: '/account/orders' }];
-          } else {
-            reply = `Hello ${user.name}, you do not have any active pre-orders right now. Can I help you find something from 1688?`;
-            links = [{ text: 'Browse Catalogue', url: '/shop' }];
-          }
-        } else {
-          reply = "To check your order progress, you can paste your order reference on our Track Order page, or sign in to your customer account.";
-          links = [
-            { text: 'Track Order Page', url: '/track' },
-            { text: 'Sign In', url: '/login' }
-          ];
-        }
-      } else if (lower.includes('how does pre-order') || lower.includes('how it works') || lower.includes('sourcing')) {
-        reply = "Pre-ordering with Helen's Varieties is straightforward:\n1. Choose your item and pay the product manufacturing cost.\n2. Our China office inspects and packages the item from 1688.\n3. Your order flies down via air cargo (10-15 days).\n4. When it lands in Lagos, cargo weight waybill is settled and it is dispatched to your doorstep.";
-        links = [{ text: 'Pre-Order Guide', url: '/pre-order' }];
-      } else if (lower.includes('shipping') || lower.includes('fee') || lower.includes('cost') || lower.includes('delivery')) {
-        reply = "Important notice: Product prices do not include international shipping, customs charges, or local delivery unless explicitly stated. International air cargo is billed per kg upon landing in Lagos so you only pay for actual measured weight.";
-        links = [{ text: 'Shipping Policy', url: '/pre-order#shipping-policy' }];
-      } else if (lower.includes('human') || lower.includes('agent') || lower.includes('complaint') || lower.includes('support')) {
-        reply = "I've flagged this for human assistance. You can reach our logistics desk directly via WhatsApp at 07032583937 or submit a sourcing ticket.";
-        links = [{ text: 'Contact Logistics Desk', url: '/contact' }];
-      } else {
-        reply = `I'm here to assist with Helen's Varieties Venture international sourcing catalogue. We source directly from 1688 at wholesale factory prices. Would you like to explore electronics, fashion, or kitchen appliances?`;
-        links = [{ text: 'View All Categories', url: '/shop' }];
-      }
-
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          sender: 'ai',
-          text: reply,
-          links,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-
-      // Speak response if voice enabled
-      if (isVoiceEnabled) {
-        speakText(reply);
-      }
-    }, 450);
+  const renderMessage = (msg: Message) => {
+    const isAi = msg.sender === 'ai';
+    return (
+      <div key={msg.id} className={`flex ${isAi ? 'justify-start' : 'justify-end'} mb-3`}>
+        <div
+          className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm break-words shadow-sm ${
+            isAi
+              ? 'bg-[#0070DC] text-white rounded-tr-none'
+              : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+          }`}
+        >
+          <div className="whitespace-pre-line">{msg.text}</div>
+          {msg.links && msg.links.length > 0 && (
+            <div className="mt-2.5 pt-2 border-t border-t-white/30 flex flex-col gap-1">
+              {msg.links.map((link, idx) => (
+                <Link
+                  key={idx}
+                  to={link.url}
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E6F0FA] underline hover:text-white"
+                >
+                  <ChevronRight className="w-3 h-3" /> {link.text}
+                </Link>
+              ))}
+            </div>
+          )}
+          {isAi && msg.spoken && !isPaused && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); replay(); }}
+              className="mt-1.5 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-[9px] transition"
+              title="Replay audio"
+              aria-label="Replay assistant audio"
+            >
+              <Play className="w-2.5 h-2.5" />
+            </button>
+          )}
+          <span className={`block mt-1 text-[8px] ${isAi ? 'text-blue-200' : 'text-slate-400'}`}>{msg.time}</span>
+        </div>
+      </div>
+    );
   };
 
-  return (
-    <>
-      {/* 1. FLOATING AI ASSISTANT LAUNCHER BUTTON */}
-      {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-          {/* Quick Jazz Audio Toggle Button */}
-          <button
-            onClick={toggleJazz}
-            className={`p-3 rounded-full shadow-xl transition-all duration-300 flex items-center justify-center ${
-              jazzPlaying
-                ? 'bg-amber-500 hover:bg-amber-600 text-white animate-pulse'
-                : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-            }`}
-            title={jazzPlaying ? 'Pause Gentle Jazz Music' : 'Play Gentle Lounge Jazz'}
-            aria-label="Toggle Jazz Music"
-          >
-            <Music className="w-5 h-5" />
-          </button>
+  const typingBubble = () => (
+    <div className="flex justify-start mb-3">
+      <div className="bg-white border border-slate-200 text-slate-800 px-3.5 py-2.5 rounded-2xl rounded-tl-none text-xs sm:text-sm shadow-sm flex items-center gap-2">
+        <span className="flex h-3 w-3 rounded-full bg-blue-600 animate-pulse" />{' '}
+        <span>Helen's Varieties Assistant is typing…</span>
+      </div>
+    </div>
+  );
 
-          {/* Main Floating Voice Agent Button */}
-          <button
-            onClick={() => setIsOpen(true)}
-            className="group bg-[#0070DC] hover:bg-[#005BB5] text-white p-3.5 sm:px-4 sm:py-3.5 rounded-full shadow-2xl flex items-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95"
-            aria-label="Open AI Voice Shopping Assistant"
-          >
-            <div className="relative flex items-center justify-center">
-              <Bot className="w-6 h-6" />
-              {isSpeaking && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-ping" />
-              )}
-            </div>
+  const quickChips = () => (
+    <div className="px-3 py-2 border-t border-slate-100 bg-white flex gap-1.5 overflow-x-auto no-scrollbar">
+      {aiConfig.suggestedQuestions.map((q, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => handleQuickAction(q)}
+          className="whitespace-nowrap px-3 py-1 text-[10px] bg-slate-100 hover:bg-[#E6F0FA] hover:text-[#0070DC] text-slate-600 rounded-full transition font-medium flex-shrink-0"
+        >
+          {q}
+        </button>
+      ))}
+    </div>
+  );
 
-            <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
-              <span className="text-xs font-extrabold flex items-center gap-1">
-                Helen AI Voice Agent
-                <Sparkles className="w-3 h-3 text-amber-300" />
-              </span>
-              <span className="text-[10px] text-blue-100 font-medium">
-                {isSpeaking ? 'Speaking...' : jazzPlaying ? 'Jazz Lounge Active' : 'Tap to talk'}
-              </span>
-            </div>
+  const voiceControls = () => (
+    <div className="p-3 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={toggleMute}
+          aria-pressed={isMuted}
+          aria-label={isMuted ? 'Unmute assistant' : 'Mute assistant'}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 hover:text-[#0070DC] transition"
+          title={isMuted ? 'Unmute' : 'Mute'}
+        >
+          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </button>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          value={voiceVolume}
+          onChange={(e) => setVoiceVolume(parseFloat(e.target.value))}
+          className="w-24 accent-[#0070DC] h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+          aria-label="Voice volume"
+        />
+      </div>
+      <div className="flex items-center gap-2 text-[10px]">
+        <span className={isSpeaking ? 'text-[#0070DC] font-medium animate-pulse' : 'text-slate-500'}>
+          {isSpeaking ? (isPaused ? 'Paused' : 'Speaking…') : 'Voice ready'}
+        </span>
+        {!backgroundSoundConfigured && (
+          <button
+            type="button"
+            onClick={toggleBackground}
+            className="text-slate-400 hover:text-[#0070DC] underline"
+            title="Background ambience not configured"
+          >
+            Ambience not set up
           </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {backgroundSoundConfigured && (
+          <button
+            type="button"
+            onClick={toggleBackground}
+            aria-pressed={isBackgroundEnabled}
+            className={`p-1.5 rounded-full transition ${isBackgroundEnabled ? 'bg-blue-50 text-[#0070DC]' : 'text-slate-500 hover:bg-slate-100'}`}
+            title={isBackgroundEnabled ? 'Pause background ambience' : 'Play background ambience'}
+          >
+            <Headphones className="w-3 h-3" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={isSpeaking ? (isPaused ? resume : pause) : replay}
+          disabled={!isSpeaking && !lastSpokenText()}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 hover:text-[#0070DC] transition disabled:opacity-40"
+          aria-label={isSpeaking ? (isPaused ? 'Resume' : 'Pause') : 'Replay last response'}
+          title={isSpeaking ? (isPaused ? 'Resume' : 'Pause') : 'Replay last response'}
+        >
+          {isSpeaking ? (isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />) : <Play className="w-3 h-3" />}
+        </button>
+        <button
+          type="button"
+          onClick={stop}
+          className="p-1.5 rounded-full text-slate-600 hover:bg-red-50 hover:text-red-600 transition"
+          aria-label="Stop speech"
+          title="Stop speech"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+
+  const lastSpokenText = () => {
+    const last = messages.slice().reverse().find((m) => m.sender === 'ai');
+    return last ? last.text : '';
+  };
+
+  const homeScreen = () => {
+    const whatsAppText =
+      `Hello Helen's Varieties Venture. I'd like to order or ask about products via WhatsApp. Please guide me on available items and how to place a pre-order.`;
+    return (
+      <div className="flex flex-col h-full items-center justify-center text-center p-6 space-y-4">
+        <div className="relative w-20 h-20 rounded-full bg-[#0070DC] flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
+          <span className="text-3xl">💙</span>
+          <span className="absolute -right-1 -bottom-1 w-3.5 h-3.5 bg-[#10B981] rounded-full border-2 border-white ring-1 ring-[#0070DC]" />
+        </div>
+        <h3 className="font-extrabold text-slate-900 text-lg">{aiConfig.assistantName}</h3>
+        <p className="text-slate-600 text-sm max-w-xs leading-relaxed">
+          "Hello! How can I help you today?"
+        </p>
+        <div className="grid w-full grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => { setMode('chat'); }}
+            className="py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-[#E6F0FA] hover:text-[#0070DC] transition shadow-sm flex items-center justify-center gap-1.5"
+          >
+            <Bot className="w-3.5 h-3.5" /> Chat with AI
+          </button>
+          <a
+            href={getWhatsAppLink(whatsAppText)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="py-2.5 bg-[#10B981] hover:bg-[#059669] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 shadow-sm transition active:scale-[0.98]"
+          >
+            <MessageCircle className="w-3.5 h-3.5 fill-white" /> WhatsApp
+          </a>
+        </div>
+        <div className="grid w-full grid-cols-2 gap-2 mt-1">
+          <Link
+            to="/shop"
+            onClick={() => setIsOpen(false)}
+            className="py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-[#E6F0FA] hover:text-[#0070DC] transition shadow-sm flex items-center justify-center gap-1.5"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" /> Browse Products
+          </Link>
+          <Link
+            to="/track"
+            onClick={() => setIsOpen(false)}
+            className="py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-[#E6F0FA] hover:text-[#0070DC] transition shadow-sm flex items-center justify-center gap-1.5"
+          >
+            <Clock className="w-3.5 h-3.5" /> Track Order
+          </Link>
+        </div>
+        <p className="text-[9px] text-slate-400 max-w-xs leading-relaxed">
+          Opening WhatsApp starts a conversation with our team — it does not place an order on the website until confirmed.
+        </p>
+      </div>
+    );
+  };
+
+  const welcomeCard = () => (
+    <div
+      className="fixed z-[60] w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl px-4 py-3.5 animate-in fade-in duration-300 sm:bottom-[92px] sm:right-24 bottom-[20px] right-4 sm:rounded-3xl"
+    >
+      <button
+        type="button"
+        onClick={dismissWelcome}
+        className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 transition"
+        aria-label="Dismiss welcome message"
+      >
+        <X className="w-4 h-4" />
+      </button>
+      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+        {aiConfig.welcomeMessage}
+      </p>
+      <div className="mt-2.5 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setWelcomeVoiceEnabled((prev) => !prev)}
+          aria-pressed={welcomeVoiceEnabled}
+          className={`p-1.5 rounded-full transition ${welcomeVoiceEnabled ? 'bg-[#0070DC] text-white' : 'bg-slate-100 text-slate-600 hover:bg-[#E6F0FA] hover:text-[#0070DC]'}`}
+          aria-label={welcomeVoiceEnabled ? 'Turn off welcome voice' : 'Play welcome message aloud'}
+          title={welcomeVoiceEnabled ? 'Turn off welcome voice' : 'Play welcome message aloud'}
+        >
+          {welcomeVoiceEnabled ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+        </button>
+        <span className="text-[10px] text-slate-500">{welcomeVoiceEnabled ? 'Voice on' : 'Tap to hear welcome'}</span>
+        <button
+          type="button"
+          onClick={openChat}
+          className="ml-auto text-xs font-bold text-[#0070DC] hover:underline"
+        >
+          Open chat <ChevronRight className="w-3 h-3 inline ml-0.5" />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Speak the welcome card once when the visitor turns voice on
+  useEffect(() => {
+    if (!welcomeShown || !welcomeVoiceEnabled) return;
+    speak(aiConfig.welcomeMessage);
+  }, [welcomeShown, welcomeVoiceEnabled, aiConfig.welcomeMessage, speak]);
+
+  const chatScreen = () => (
+    <div className="flex flex-col h-full bg-white border-l border-slate-200 shadow-2xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#0070DC] flex items-center justify-center text-white text-xs font-bold shadow-md">
+            HV
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-900">{aiConfig.assistantName}</div>
+            <div className="flex items-center gap-1 text-[10px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" /> Online
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="p-1.5 rounded-full text-slate-600 hover:bg-slate-100 transition"
+            aria-label="Minimise assistant"
+            title="Minimise"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Speaking indicator */}
+      {isSpeaking && (
+        <div className="px-4 py-1.5 shrink-0 bg-[#E6F0FA] border-b border-blue-100 flex items-center gap-2 text-[10px] font-bold text-[#005BB5] animate-pulse">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#0070DC] animate-pulse" />
+          {isPaused ? 'Voice paused' : "Helen's Varieties Assistant is speaking"}
         </div>
       )}
 
-      {/* 2. EXPANDED VOICE-ENABLED CHAT WINDOW */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3" ref={messagesEndRef}>
+        {messages.map(renderMessage)}
+        {typing && typingBubble()}
+        {messages.length === 0 && !typing && (
+          <div className="text-center py-4">
+            <p className="text-[11px] text-slate-500">Start a conversation below</p>
+          </div>
+        )}
+      </div>
+
+      {quickChips()}
+
+      <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="p-3 border-t border-slate-100 bg-white shrink-0">
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            onClick={toggleListening}
+            className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-[#E6F0FA] hover:text-[#0070DC] transition"
+            aria-label="Speak your message"
+            title="Speak"
+          >
+            <Mic className="w-4 h-4" />
+          </button>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Ask about products, prices, pre-orders…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 bg-slate-50 text-xs px-3.5 py-2.5 rounded-xl border border-transparent focus:border-[#0070DC] focus:bg-white focus:outline-none transition"
+            aria-label="Your message"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="bg-[#0070DC] hover:bg-[#005BB5] disabled:opacity-40 disabled:cursor-not-allowed text-white p-2.5 rounded-xl transition flex-shrink-0"
+            aria-label="Send message"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+      </form>
+
+      {voiceControls()}
+    </div>
+  );
+
+  const launcher = () => (
+    <div className="fixed z-[55] bottom-6 right-6 md:bottom-6 md:right-6">
+      <button
+        type="button"
+        onClick={openChat}
+        className="relative w-14 h-14 rounded-full bg-[#0070DC] flex items-center justify-center shadow-2xl shadow-blue-500/40 ring-4 ring-white ring-offset-2 ring-offset-[#0070DC] transition-all hover:scale-105 active:scale-95"
+        aria-label="Open Helen's Varieties Assistant"
+        title="Open shopping assistant"
+      >
+        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0070DC] text-xl font-bold shadow-md">
+          HV
+        </div>
+        <span className="absolute -right-1 -bottom-1 w-3 h-3 bg-[#10B981] rounded-full border-2 border-white ring-1 ring-[#0070DC]" />
+        {/* Pulse ring when assistant is ready */}
+        {!welcomeShown && !prefersReducedMotion && (
+          <span className="absolute inset-0 rounded-full border border-[#0070DC]/40 shadow-[0_0_12px_rgba(0,112,220,0.4)] animate-pulse pointer-events-none" />
+        )}
+      </button>
+    </div>
+  );
+
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  return (
+    <>
+      {welcomeShown && welcomeCard()}
+      {launcher()}
       {isOpen && (
-        <div className="fixed bottom-5 right-5 z-50 w-[94vw] sm:w-[410px] h-[580px] bg-white rounded-3xl shadow-2xl border border-blue-100 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-300">
-          {/* Assistant Header */}
-          <div className="bg-gradient-to-r from-blue-900 via-[#0070DC] to-blue-800 text-white p-4 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <Bot className="w-6 h-6 text-white" />
-                {isSpeaking && (
-                  <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-blue-900 animate-pulse" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-extrabold flex items-center gap-1.5">
-                  Helen Voice Shopping Agent
-                </h3>
-                <div className="flex items-center gap-2 text-[11px] text-blue-100 font-medium">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                    Live Grounded AI
-                  </span>
-                  {jazzPlaying && (
-                    <span className="text-amber-300 flex items-center gap-0.5 text-[10px]">
-                      • 🎷 Jazz Lounge {isDucked && '(Ducked)'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Header Control Buttons */}
-            <div className="flex items-center gap-1.5 text-white/90">
-              {/* Voice On/Off Toggle */}
-              <button
-                onClick={handleToggleVoice}
-                className={`p-2 rounded-xl transition ${
-                  isVoiceEnabled ? 'bg-emerald-500/30 text-emerald-300' : 'hover:bg-white/10 text-white/70'
-                }`}
-                title={isVoiceEnabled ? 'Mute AI Voice' : 'Enable AI Voice'}
-                aria-label="Toggle Voice"
-              >
-                {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
-
-              {/* Music Settings Toggle */}
-              <button
-                onClick={() => setShowMusicControls(!showMusicControls)}
-                className={`p-2 rounded-xl transition ${
-                  jazzPlaying ? 'bg-amber-500/30 text-amber-300' : 'hover:bg-white/10 text-white/70'
-                }`}
-                title="Jazz Music Atmosphere Settings"
-                aria-label="Jazz Music Settings"
-              >
-                <Music className="w-4 h-4" />
-              </button>
-
-              {/* Close */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition"
-                aria-label="Close Assistant"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* 3. PERSISTENT JAZZ MUSIC BAR (WHEN ACTIVE OR EXPANDED) */}
-          {(showMusicControls || jazzPlaying) && (
-            <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between text-xs border-b border-slate-800 animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleJazz}
-                  className="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-black flex items-center justify-center font-bold transition"
-                  aria-label={jazzPlaying ? 'Pause Jazz' : 'Play Jazz'}
-                >
-                  {jazzPlaying ? <Pause className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-black" />}
-                </button>
-                <div className="leading-tight">
-                  <p className="font-bold text-[11px] text-amber-300">Gentle Lounge Jazz</p>
-                  <p className="text-[9px] text-slate-400">
-                    {isDucked ? 'Volume ducked for voice' : 'Relaxing shopping ambience'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Volume Slider & Mute */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={jazzMuted ? 0 : jazzVolume}
-                  onChange={(e) => setJazzVolume(parseFloat(e.target.value))}
-                  className="w-16 accent-amber-400 cursor-pointer h-1"
-                />
-                <button
-                  onClick={toggleJazzMute}
-                  className="text-slate-400 hover:text-white"
-                >
-                  {jazzMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Speaking Waveform Indicator Banner */}
-          {isSpeaking && (
-            <div className="bg-emerald-50 px-4 py-2 border-b border-emerald-100 flex items-center justify-between text-xs text-emerald-800">
-              <div className="flex items-center gap-2">
-                <span className="flex gap-0.5 items-end h-3">
-                  <span className="w-1 bg-emerald-600 rounded-full animate-bounce h-2" />
-                  <span className="w-1 bg-emerald-600 rounded-full animate-bounce h-3 delay-75" />
-                  <span className="w-1 bg-emerald-600 rounded-full animate-bounce h-1.5 delay-150" />
-                </span>
-                <span className="font-bold text-[11px]">Helen is speaking...</span>
-              </div>
-              <button
-                onClick={() => {
-                  synthRef.current?.cancel();
-                  setIsSpeaking(false);
-                  setSpeechDucking(false);
-                }}
-                className="text-[10px] font-bold text-red-600 hover:underline"
-              >
-                Stop Voice
-              </button>
-            </div>
-          )}
-
-          {/* Listening Audio Indicator Banner */}
-          {isListening && (
-            <div className="bg-red-50 px-4 py-2 border-b border-red-100 flex items-center justify-between text-xs text-red-800 animate-pulse">
-              <div className="flex items-center gap-2">
-                <Mic className="w-4 h-4 text-red-600" />
-                <span className="font-bold text-[11px]">Listening to your voice... Speak now</span>
-              </div>
-              <button
-                onClick={toggleListening}
-                className="text-[10px] font-bold text-red-700 underline"
-              >
-                Done
-              </button>
-            </div>
-          )}
-
-          {/* Chat Messages Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F7F7F8]">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs whitespace-pre-wrap leading-relaxed shadow-xs ${
-                    msg.sender === 'user'
-                      ? 'bg-[#0070DC] text-white rounded-br-none'
-                      : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'
-                  }`}
-                >
-                  {msg.text}
-
-                  {msg.links && (
-                    <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1">
-                      {msg.links.map((link, idx) => (
-                        <Link
-                          key={idx}
-                          to={link.url}
-                          onClick={() => setIsOpen(false)}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0070DC] hover:underline"
-                        >
-                          <ChevronRight className="w-3 h-3" /> {link.text}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.time}</span>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick Prompts */}
-          <div className="px-3 py-2 bg-white border-t border-slate-100 flex gap-1.5 overflow-x-auto no-scrollbar">
-            {[
-              "Do you have smart watches?",
-              "Recommend products under ₦20,000",
-              "Where is my order?",
-              "How does pre-order work?"
-            ].map((prompt, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleSend(prompt)}
-                className="whitespace-nowrap px-3 py-1 text-[10px] bg-slate-100 hover:bg-blue-50 hover:text-[#0070DC] text-slate-600 rounded-full transition font-medium flex-shrink-0"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-
-          {/* Input & Microphone Voice Controls Footer */}
-          <div className="p-3 bg-white border-t border-slate-200">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="flex items-center gap-2"
-            >
-              {/* Spoken Voice Input Mic Trigger */}
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={`p-2.5 rounded-xl transition ${
-                  isListening
-                    ? 'bg-red-500 text-white animate-bounce shadow-md shadow-red-500/30'
-                    : 'bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-[#0070DC]'
-                }`}
-                title="Speak to Assistant"
-                aria-label="Microphone"
-              >
-                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              </button>
-
-              <input
-                type="text"
-                placeholder={isListening ? "Listening..." : "Ask Helen anything or tap mic..."}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1 bg-slate-100 text-xs px-3.5 py-2.5 rounded-xl border border-transparent focus:border-[#0070DC] focus:bg-white focus:outline-none transition"
-              />
-
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                className="bg-[#0070DC] hover:bg-[#005BB5] disabled:opacity-40 text-white p-2.5 rounded-xl transition"
-                aria-label="Send message"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+        <div
+          ref={panelRef}
+          className="fixed z-[60] right-6 bottom-6 md:bottom-4 md:right-4 w-[420px] h-[70vh] md:h-auto max-h-[85vh] rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col animate-in zoom-in duration-200 sm:rounded-[1rem] md:rounded-3xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="assistant-title"
+        >
+          {mode === 'home' ? homeScreen() : chatScreen()}
         </div>
       )}
     </>

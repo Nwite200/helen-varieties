@@ -1,4 +1,34 @@
-import { WhatsAppConversation, AuditLog, WhatsAppConfig } from './types';
+import { WhatsAppConversation, AuditLog, WhatsAppConfig, AIAssistantConfig } from './types';
+
+export const DEFAULT_AI_CONFIG: AIAssistantConfig = {
+  id: 'ai-config-1',
+  assistantName: "Helen's Varieties Assistant",
+  welcomeMessage: "Hello! 👋 Welcome to Helen's Varieties Venture. I'm your AI shopping assistant. I can help you discover products, find great options, understand our pre-order process, and get assistance with your order. What are you looking for today?",
+  avatarUrl: null,
+  aiEnabled: true,
+  greetingBehavior: 'delayed',
+  voiceProvider: 'browser',
+  voiceId: '',
+  speakingRate: 1.15,
+  pitch: 1.0,
+  defaultVoiceVolume: 1.0,
+  backgroundSoundEnabled: false,
+  backgroundSoundAsset: null,
+  backgroundSoundVolume: 0.2,
+  suggestedQuestions: [
+    'Do you have smart watches?',
+    'Recommend products under ₦20,000',
+    'Where is my order?',
+    'How does pre-order work?',
+    'Explain shipping charges',
+    'Contact support',
+  ],
+  humanSupportContact: {
+    phone: '07032583937',
+    whatsapp: 'https://wa.me/2347032583937',
+  },
+  updatedAt: new Date().toISOString(),
+};
 
 export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   {

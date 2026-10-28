@@ -15,7 +15,8 @@ import {
   ShieldCheck, 
   LogOut, 
   Plus, 
-  Trash2, 
+  Trash2,
+  X,
   Check, 
   AlertTriangle, 
   Search, 
@@ -27,7 +28,7 @@ import {
   Layers
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { OrderStatus, Product } from '../types';
+import { OrderStatus, Product, GreetingBehavior, TTSVoiceProvider } from '../types';
 import { CATEGORIES } from '../mockData';
 
 export const AdminAppLayout: React.FC = () => {
@@ -46,7 +47,9 @@ export const AdminAppLayout: React.FC = () => {
     updateOrderStatus,
     addProduct,
     deleteProduct,
-    formatPrice 
+    formatPrice,
+    aiConfig,
+    updateAiConfig
   } = useApp();
 
   const location = useLocation();
@@ -97,13 +100,80 @@ export const AdminAppLayout: React.FC = () => {
   const [newStatus, setNewStatus] = useState<OrderStatus>('Sourcing in Progress');
   const [statusNote, setStatusNote] = useState('');
 
+  // AI Assistant settings form state (admin only)
+  const [aiName, setAiName] = useState(aiConfig.assistantName);
+  const [welcomeMessage, setWelcomeMessage] = useState(aiConfig.welcomeMessage);
+  const [aiEnabled, setAiEnabled] = useState(aiConfig.aiEnabled);
+  const [greetingBehavior, setGreetingBehavior] = useState(aiConfig.greetingBehavior);
+  const [voiceProvider, setVoiceProvider] = useState(aiConfig.voiceProvider);
+  const [voiceId, setVoiceId] = useState(aiConfig.voiceId);
+  const [speakingRate, setSpeakingRate] = useState(aiConfig.speakingRate);
+  const [defaultVoiceVolume, setDefaultVoiceVolume] = useState(aiConfig.defaultVoiceVolume);
+  const [avatarUrl, setAvatarUrl] = useState(aiConfig.avatarUrl || '');
+  const [backgroundEnabled, setBackgroundEnabled] = useState(aiConfig.backgroundSoundEnabled);
+  const [backgroundAsset, setBackgroundAsset] = useState(aiConfig.backgroundSoundAsset || '');
+  const [backgroundVolume, setBackgroundVolume] = useState(aiConfig.backgroundSoundVolume);
+  const [suggestedQuestions, setSuggestedQuestions] = useState(aiConfig.suggestedQuestions);
+  const [humanPhone, setHumanPhone] = useState(aiConfig.humanSupportContact.phone);
+  const [humanWhatsapp, setHumanWhatsapp] = useState(aiConfig.humanSupportContact.whatsapp);
+
+  const saveAiConfig = () => {
+    updateAiConfig({
+      assistantName: aiName,
+      welcomeMessage,
+      aiEnabled,
+      greetingBehavior: greetingBehavior as any,
+      voiceProvider: voiceProvider as any,
+      voiceId,
+      speakingRate: Number(speakingRate),
+      pitch: aiConfig.pitch,
+      defaultVoiceVolume: Number(defaultVoiceVolume),
+      avatarUrl: avatarUrl || null,
+      backgroundSoundEnabled: backgroundEnabled,
+      backgroundSoundAsset: backgroundAsset || null,
+      backgroundSoundVolume: Number(backgroundVolume),
+      suggestedQuestions,
+      humanSupportContact: {
+        phone: humanPhone,
+        whatsapp: humanWhatsapp,
+      },
+    });
+  };
+
   // State for product modal
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [pName, setPName] = useState('');
   const [pCategory, setPCategory] = useState('Electronics & Gadgets');
   const [pPrice, setPPrice] = useState(18500);
   const [pSku, setPSku] = useState('HV-SRC-' + Math.floor(100 + Math.random() * 900));
-  const [pImage, setPImage] = useState('https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80');
+  const [pImages, setPImages] = useState<string[]>(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
+  const [pImageUrlInput, setPImageUrlInput] = useState('');
+
+  const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setPImages((prev) => [...prev, reader.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const addImageFromUrl = () => {
+    const url = pImageUrlInput.trim();
+    if (!url) return;
+    setPImages((prev) => [...prev, url]);
+    setPImageUrlInput('');
+  };
+
+  const removeImage = (idx: number) => {
+    setPImages((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   // WhatsApp active conversation state
   const [selectedConvId, setSelectedConvId] = useState<string>(whatsappConversations[0]?.id || '');
@@ -141,8 +211,8 @@ export const AdminAppLayout: React.FC = () => {
       price: Number(pPrice),
       rating: 5.0,
       reviewsCount: 1,
-      primaryImage: pImage,
-      images: [pImage],
+      primaryImage: pImages[0] || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80',
+      images: pImages.length ? pImages : ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80'],
       variants: [{ name: 'Option', options: ['Default'] }],
       specifications: { 'Procurement Origin': '1688 Verified Supplier' },
       isFeatured: true,
@@ -659,6 +729,212 @@ export const AdminAppLayout: React.FC = () => {
           </div>
         )}
 
+        {/* 5. AI ASSISTANT CONFIGURATION (ADMIN ONLY) */}
+        {activeSection === 'ai-assistant' && (
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 max-w-3xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">AI Shopping Assistant Settings</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Configure the floating Helen's Varieties Assistant. Changes apply to all public pages.
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0070DC] text-[10px] font-bold border border-blue-100">
+                Admin Only
+              </span>
+            </div>
+
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Assistant display name</label>
+                  <input
+                    type="text"
+                    value={aiName}
+                    onChange={(e) => setAiName(e.target.value)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">AI assistant status</label>
+                  <select
+                    value={aiEnabled ? 'enabled' : 'disabled'}
+                    onChange={(e) => setAiEnabled(e.target.value === 'enabled')}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none bg-white"
+                  >
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled (hidden from customers)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Welcome message</label>
+                <textarea
+                  value={welcomeMessage}
+                  onChange={(e) => setWelcomeMessage(e.target.value)}
+                  rows={3}
+                  className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Shown in the welcome card after a short delay.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Greeting behaviour</label>
+                  <select
+                    value={greetingBehavior}
+                    onChange={(e) => setGreetingBehavior(e.target.value as GreetingBehavior)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none bg-white"
+                  >
+                    <option value="delayed">Delayed once per session</option>
+                    <option value="immediate">Immediately on load</option>
+                    <option value="none">Disabled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Voice provider</label>
+                  <select
+                    value={voiceProvider}
+                    onChange={(e) => setVoiceProvider(e.target.value as TTSVoiceProvider)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none bg-white"
+                  >
+                    <option value="browser">Browser voice (no credentials)</option>
+                    <option value="elevenlabs">ElevenLabs (server-side)</option>
+                    <option value="azure">Azure TTS (server-side)</option>
+                    <option value="polly">Amazon Polly (server-side)</option>
+                  </select>
+                  <p className="text-[10px] text-slate-400 mt-1">Remote providers need TTS_API_KEY set in Cloudflare secrets.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Voice ID / name</label>
+                  <input
+                    type="text"
+                    value={voiceId}
+                    placeholder="e.g. default browser voice"
+                    onChange={(e) => setVoiceId(e.target.value)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Speaking rate</label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value={speakingRate}
+                    onChange={(e) => setSpeakingRate(Number(e.target.value))}
+                    className="w-full accent-[#0070DC]"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 text-center">{speakingRate}x</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Default voice volume</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={defaultVoiceVolume}
+                    onChange={(e) => setDefaultVoiceVolume(Number(e.target.value))}
+                    className="w-full accent-[#0070DC]"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 text-center">{Math.round(Number(defaultVoiceVolume) * 100)}%</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Avatar URL (image)</label>
+                  <input
+                    type="text"
+                    value={avatarUrl}
+                    placeholder="https://…/avatar.png or leave blank"
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">Background technology ambience</span>
+                  <button
+                    type="button"
+                    onClick={() => setBackgroundEnabled(!backgroundEnabled)}
+                    className={`relative w-10 h-5 rounded-full p-0.5 transition ${backgroundEnabled ? 'bg-[#0070DC]' : 'bg-slate-200'}`}
+                  >
+                    <span className={`block w-3 h-3 rounded-full bg-white shadow-md transition ${backgroundEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700">Background sound asset path</label>
+                  <input
+                    type="text"
+                    value={backgroundAsset}
+                    placeholder="/audio/tech-ambience.mp3"
+                    onChange={(e) => setBackgroundAsset(e.target.value)}
+                    disabled={!backgroundEnabled}
+                    className={`w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none ${!backgroundEnabled ? 'bg-slate-100 text-slate-400' : ''}`}
+                  />
+                  <label className="block text-xs font-bold text-slate-700">Background volume</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={backgroundVolume}
+                    onChange={(e) => setBackgroundVolume(Number(e.target.value))}
+                    disabled={!backgroundEnabled}
+                    className={`w-full accent-[#0070DC] ${!backgroundEnabled ? 'opacity-50' : ''}`}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Optional. Disabled by default. Add a licensed technology ambience track to <code className="font-mono">public/audio/tech-ambience.mp3</code> and select it here. Never autoplayed before visitor interaction.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Suggested questions (comma separated)</label>
+                <textarea
+                  value={suggestedQuestions.join(', ')}
+                  onChange={(e) => setSuggestedQuestions(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  rows={2}
+                  className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">Human support phone</label>
+                  <input
+                    type="text"
+                    value={humanPhone}
+                    onChange={(e) => setHumanPhone(e.target.value)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">WhatsApp link</label>
+                  <input
+                    type="text"
+                    value={humanWhatsapp}
+                    onChange={(e) => setHumanWhatsapp(e.target.value)}
+                    className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={saveAiConfig}
+                className="w-full py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white font-extrabold text-sm rounded-xl shadow-md transition-all active:scale-[0.99]"
+              >
+                Save AI Assistant Settings
+              </button>
+            </div>
+          </div>
+        )}
         {/* 6. SETTINGS & OTHER MODULES */}
         {activeSection === 'settings' && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 max-w-xl">
@@ -797,13 +1073,57 @@ export const AdminAppLayout: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Image URL</label>
-                <input
-                  type="text"
-                  value={pImage}
-                  onChange={(e) => setPImage(e.target.value)}
-                  className="w-full p-2.5 border rounded-xl"
-                />
+                <label className="block font-bold text-slate-700 mb-1">Product Images (upload or paste URL)</label>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageFiles}
+                    className="w-full p-2.5 border rounded-xl text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-[#0070DC] file:text-white file:text-xs file:font-bold file:cursor-pointer"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={pImageUrlInput}
+                      placeholder="https://…/image.jpg"
+                      onChange={(e) => setPImageUrlInput(e.target.value)}
+                      className="flex-1 p-2.5 border rounded-xl text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={addImageFromUrl}
+                      className="px-3 py-2 bg-slate-800 hover:bg-black text-white text-xs font-bold rounded-xl transition"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {pImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 mt-1">
+                      {pImages.map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={img}
+                            alt={`Product image ${idx + 1}`}
+                            className="w-full aspect-square object-cover rounded-lg border border-slate-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
+                            aria-label="Remove image"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          {idx === 0 && (
+                            <span className="absolute bottom-1 left-1 bg-[#0070DC] text-white text-[8px] font-bold px-1.5 py-0.5 rounded">Primary</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">First image is the primary thumbnail. Add more for the product gallery.</p>
               </div>
 
               <div className="flex gap-2 justify-end pt-3">

@@ -117,6 +117,8 @@ export interface Order {
   paymentReference?: string;
   paymentStatus?: 'Unpaid' | 'Paid' | 'Refunded';
   source?: 'website' | 'whatsapp';
+  isGuest?: boolean;
+  trackingSecret?: string;
   sourcingNotes?: {
     date: string;
     message: string;
@@ -174,4 +176,31 @@ export interface WhatsAppConfig {
   voiceNoteEnabled: boolean;
   welcomeMessage: string;
   disclaimer: string;
+}
+
+export type GreetingBehavior = 'immediate' | 'delayed' | 'none';
+export type TTSVoiceProvider = 'browser' | 'elevenlabs' | 'azure' | 'polly';
+
+export interface AIAssistantConfig {
+  id: string;
+  assistantName: string;
+  welcomeMessage: string;
+  avatarUrl: string | null;
+  aiEnabled: boolean;
+  greetingBehavior: GreetingBehavior;
+  voiceProvider: TTSVoiceProvider;
+  voiceId: string;
+  speakingRate: number;
+  pitch: number;
+  defaultVoiceVolume: number;
+  backgroundSoundEnabled: boolean;
+  backgroundSoundAsset: string | null;
+  backgroundSoundVolume: number;
+  suggestedQuestions: string[];
+  humanSupportContact: {
+    phone: string;
+    whatsapp: string; // https://wa.me/2347032583937
+    email?: string;
+  };
+  updatedAt: string;
 }

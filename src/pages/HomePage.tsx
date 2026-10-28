@@ -66,6 +66,7 @@ export const HomePage: React.FC = () => {
 
   const featuredProducts = products.filter(p => p.isFeatured).slice(0, 6);
   const trendingProducts = products.filter(p => p.isTrending).slice(0, 4);
+  const moreProducts = products.filter(p => !p.isTrending && !p.isFeatured).slice(0, 8);
 
   return (
     <div className="space-y-12 pb-16">
@@ -422,6 +423,31 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      {/* 8. MORE PRODUCTS FROM OTHER CATEGORIES */}
+      {moreProducts.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">More to Discover</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Explore products across other categories on Helen's Varieties.
+              </p>
+            </div>
+            <Link
+              to="/shop"
+              className="text-xs sm:text-sm font-bold text-[#0070DC] hover:underline flex items-center gap-1"
+            >
+              View All <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {moreProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

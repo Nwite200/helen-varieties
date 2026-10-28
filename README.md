@@ -62,11 +62,32 @@ The compiled output is located in the `dist/` directory.
    - 1688 Catalogue management (add, edit, publish, remove items).
    - Exchange rate monitor benchmarked to Chinese Yuan (`¥1 = ₦220.00`).
 
-4. **AI Sourcing Assistant**:
-   - Floating interactive assistant grounded in verified catalogue inventory and policies.
-   - Answers queries regarding the 4-step sourcing lifecycle and shipping arrangements.
+4. **AI Shopping Assistant (Helen's Varieties Venture Assistant)**:
+   - Floating assistant in the bottom-right corner of every public page — replaces the standalone WhatsApp button (only one floating support widget remains).
+   - Welcome card: delayed, session-aware greeting with close button and explicit sound control (no autoplaying audio).
+   - AI chat: catalogue search, recommendations, prices/specifications, pre-order and shipping explanations, order tracking, checkout guidance, and WhatsApp human-support escalation — grounded in the real catalogue (no invented prices, stock, or delivery dates).
+   - WhatsApp ordering integrated into the agent (https://wa.me/2347032583937), plus product-page and cart WhatsApp options with dynamically generated prefilled messages. Opening WhatsApp starts a conversation only; it never submits or confirms a website order.
+   - Voice: browser speech synthesis by default; optional server-side neural TTS via /api/tts with provider keys in Cloudflare secrets only.
+   - Background ambience: optional technology ambience, disabled by default; add a licensed track at public/audio/tech-ambience.mp3 and enable it in Admin → AI Assistant Settings.
 
 ---
+
+## 🔐 Configuration & Secrets
+
+**Non-secret AI settings** (display name, avatar, welcome message, voice provider/voice ID/speaking rate/volume, background sound asset/volume, greeting behaviour, suggested questions, human support phone/WhatsApp) are editable by administrators at `/admin/ai-assistant` and stored in the database (`migrations/0002_ai_assistant_settings.sql`).
+
+**Provider credentials** (`TTS_API_KEY`, `TTS_PROVIDER`) must be set as Cloudflare secrets — never in frontend code:
+
+```bash
+cd "Helens varities website"
+npx wrangler secret put TTS_API_KEY    # ElevenLabs / Azure / Polly key (optional)
+npx wrangler secret put TTS_PROVIDER   # elevenlabs | azure | polly (optional, default elevenlabs)
+```
+
+Without credentials the assistant gracefully falls back to browser speech synthesis and text-only responses, and background ambience stays disabled.
+
+## 🧪 Tests
+`npm test` — vitest suite covering the catalogue, orders, WhatsApp config/links, WhatsApp message builders, and grounded AI replies (no invented data).
 
 ## ☁️ Production Deployment (Cloudflare)
 
