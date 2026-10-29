@@ -18,6 +18,7 @@ import {
   Trash2,
   Pencil,
   X,
+  FileText,
   Check, 
   AlertTriangle, 
   Search, 
@@ -94,6 +95,7 @@ export const AdminAppLayout: React.FC = () => {
   else if (path.includes('/whatsapp')) activeSection = 'whatsapp';
   else if (path.includes('/ai-assistant')) activeSection = 'ai-assistant';
   else if (path.includes('/reports')) activeSection = 'reports';
+  else if (path.includes('/analytics')) activeSection = 'analytics';
   else if (path.includes('/settings')) activeSection = 'settings';
   else if (path.includes('/audit-logs')) activeSection = 'audit-logs';
 
@@ -280,6 +282,7 @@ export const AdminAppLayout: React.FC = () => {
     { label: 'WhatsApp Live Hub', path: '/admin/whatsapp', icon: MessageCircle, id: 'whatsapp', count: whatsappConversations.filter(c => c.escalatedToHuman).length },
     { label: 'AI Shopping Assistant', path: '/admin/ai-assistant', icon: Bot, id: 'ai-assistant' },
     { label: 'Reports & Analytics', path: '/admin/reports', icon: BarChart3, id: 'reports' },
+    { label: 'Sales Analytics', path: '/admin/analytics', icon: BarChart3, id: 'analytics' },
     { label: 'Store Settings', path: '/admin/settings', icon: Settings, id: 'settings' },
     { label: 'Audit Logs', path: '/admin/audit-logs', icon: ShieldCheck, id: 'audit-logs', count: auditLogs.length },
   ];
@@ -714,6 +717,9 @@ export const AdminAppLayout: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
+                    <Link to={`/invoice/${o.orderNumber}`} className="text-xs font-bold text-[#0070DC] hover:underline flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" /> Invoice
+                    </Link>
                     <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
                       {o.status}
                     </span>
@@ -980,6 +986,152 @@ export const AdminAppLayout: React.FC = () => {
             </div>
           </div>
         )}
+        {/* ANALYTICS DASHBOARD */}
+        {activeSection === 'analytics' && (() => {
+          const totalOrders = orders.length;
+          const totalRevenue = orders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+          const avgOrder = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
+          const uniqueCustomers = new Set(orders.map((o) => o.customerEmail || o.customerPhone || o.customerName)).size;
+          const prodMap = new Map<string, { name: string; qty: number; revenue: number }>();
+          orders.forEach((o) => (o.items || []).forEach((it) => {
+            const prev = prodMap.get(it.productName) || { name: it.productName, qty: 0, revenue: 0 };
+            prev.qty += it.quantity;
+            prev.revenue += it.totalPrice;
+            prodMap.set(it.productName, prev);
+          }));
+          const topProducts = [...prodMap.values()].sort((a, b) => b.qty - a.qty).slice(0, 6);
+          const maxProdQty = topProducts.reduce((m, p) => Math.max(m, p.qty), 1);
+          const custMap = new Map<string, { name: string; spend: number; orders: number }>();
+          orders.forEach((o) => {
+            const key = o.customerEmail || o.customerPhone || o.customerName;
+            const prev = custMap.get(key) || { name: o.customerName, spend: 0, orders: 0 };
+            prev.spend += o.totalAmount || 0;
+            prev.orders += 1;
+            custMap.set(key, prev);
+          });
+          const topCustomers = [...custMap.values()].sort((a, b) => b.spend - a.spend).slice(0, 6);
+          const maxCustSpend = topCustomers.reduce((m, c) => Math.max(m, c.spend), 1);
+
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Sales Analytics</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Orders, revenue, best-selling products, and leading customers.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Orders', value: totalOrders, color: 'text-[#0070DC]' },
+                  { label: 'Total Revenue', value: formatPrice(totalRevenue), color: 'text-emerald-600' },
+                  { label: 'Avg. Order Value', value: formatPrice(avgOrder), color: 'text-amber-600' },
+                  { label: 'Unique Customers', value: uniqueCustomers, color: 'text-purple-600' },
+                ].map((k) => (
+                  <div key={k.label} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{k.label}</p>
+                    <p className={`text-xl font-extrabold mt-1 ${k.color}`}>{k.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                  <h3 className="text-sm font-extrabold text-slate-900 mb-3">Best-Selling Products (by quantity)</h3>
+                  {topProducts.length === 0 ? (
+                    <p className="text-xs text-slate-400">No order data yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {topProducts.map((p) => (
+                        <div key={p.name}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="font-semibold text-slate-700 truncate max-w-[70%]">{p.name}</span>
+                            <span className="text-slate-500">{p.qty} units • {formatPrice(p.revenue)}</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#0070DC] rounded-full" style={{ width: `${(p.qty / maxProdQty) * 100}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                  <h3 className="text-sm font-extrabold text-slate-900 mb-3">Leading Customers (by spend)</h3>
+                  {topCustomers.length === 0 ? (
+                    <p className="text-xs text-slate-400">No order data yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {topCustomers.map((c) => (
+                        <div key={c.name}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="font-semibold text-slate-700 truncate max-w-[60%]">{c.name}</span>
+                            <span className="text-slate-500">{c.orders} order(s) • {formatPrice(c.spend)}</span>
+                          </div>
+                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(c.spend / maxCustSpend) * 100}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                  <h3 className="text-sm font-extrabold text-slate-900 mb-3">Orders by Date</h3>
+                  {(() => {
+                    const dateMap = new Map<string, number>();
+                    orders.forEach((o) => dateMap.set(o.date, (dateMap.get(o.date) || 0) + 1));
+                    const dateEntries = [...dateMap.entries()].slice(-10);
+                    const maxDateCount = dateEntries.reduce((m, d) => Math.max(m, d[1]), 1);
+                    if (dateEntries.length === 0) return <p className="text-xs text-slate-400">No order data yet.</p>;
+                    return (
+                      <div className="flex items-end gap-1.5 h-40">
+                        {dateEntries.map(([date, count]) => (
+                          <div key={date} className="flex-1 flex flex-col items-center gap-1">
+                            <div className="w-full bg-[#0070DC] rounded-t" style={{ height: `${(count / maxDateCount) * 100}%`, minHeight: '4px' }} title={`${date}: ${count}`} />
+                            <span className="text-[8px] text-slate-400 truncate w-full text-center">{date.split(' ')[0]}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+                  <h3 className="text-sm font-extrabold text-slate-900 mb-3">Order Status Distribution</h3>
+                  {(() => {
+                    const statusMap = new Map<string, number>();
+                    orders.forEach((o) => statusMap.set(o.status, (statusMap.get(o.status) || 0) + 1));
+                    const statusEntries = [...statusMap.entries()].sort((a, b) => b[1] - a[1]);
+                    if (statusEntries.length === 0) return <p className="text-xs text-slate-400">No order data yet.</p>;
+                    return (
+                      <div className="space-y-2">
+                        {statusEntries.map(([status, count]) => (
+                          <div key={status} className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-700">{status}</span>
+                            <span className="text-slate-500">{count} ({Math.round((count / orders.length) * 100)}%)</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {topProducts.length > 0 && topCustomers.length > 0 && (
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-xs text-slate-700 space-y-1">
+                  <p><strong>Top product:</strong> {topProducts[0].name} ({topProducts[0].qty} units, {formatPrice(topProducts[0].revenue)})</p>
+                  <p><strong>Top customer:</strong> {topCustomers[0].name} ({topCustomers[0].orders} order(s), {formatPrice(topCustomers[0].spend)})</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* 6. SETTINGS & OTHER MODULES */}
         {activeSection === 'settings' && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6 max-w-xl">

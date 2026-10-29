@@ -11,6 +11,7 @@ import { LogoIntroAnimation } from './components/LogoIntroAnimation';
 import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
+import { InvoicePage } from './pages/InvoicePage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { TrackOrderPage } from './pages/TrackOrderPage';
@@ -52,6 +53,7 @@ function AppInner() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/track" element={<TrackOrderPage />} />
+            <Route path="/invoice/:orderNumber" element={<InvoicePage />} />
             <Route path="/pre-order" element={<PreOrderInfoPage />} />
             <Route path="/about" element={<PreOrderInfoPage />} />
             <Route path="/contact" element={<ContactPage />} />

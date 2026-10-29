@@ -12,7 +12,8 @@ import {
   UserCheck,
   Mail,
   Phone,
-  Info
+  Info,
+  FileText
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -593,6 +594,12 @@ export const CheckoutPage: React.FC = () => {
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link
+              to={`/invoice/${createdOrderNumber}`}
+              className="flex-1 py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white font-bold text-xs rounded-xl shadow-sm transition text-center flex items-center justify-center gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5" /> View & Print Receipt
+            </Link>
             <Link
               to="/track"
               className="flex-1 py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm transition text-center"
