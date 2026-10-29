@@ -73,6 +73,9 @@ export const Navbar: React.FC = () => {
             <a href="tel:+2348000000000" className="hover:underline flex items-center gap-1">
               <Phone className="w-3.5 h-3.5" /> Contact Us
             </a>
+            <Link to="/admin/login" className="hover:underline flex items-center gap-1 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" /> Admin
+            </Link>
             <div className="flex items-center gap-2 pl-2 border-l border-white/30 text-white/80">
               <span className="hover:text-white cursor-pointer">FB</span>
               <span>•</span>
@@ -379,6 +382,13 @@ export const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            <Link
+              to="/admin/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#0070DC] rounded-lg flex items-center gap-1.5"
+            >
+              <ShieldCheck className="w-4 h-4" /> Admin Login
+            </Link>
           </nav>
 
           <div className="pt-3 border-t border-slate-100">
