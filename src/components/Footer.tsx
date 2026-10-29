@@ -196,7 +196,12 @@ export const Footer: React.FC = () => {
         <div className="flex items-center gap-4">
           <Link to="/privacy" className="hover:text-slate-500">Privacy</Link>
           <Link to="/terms" className="hover:text-slate-500">Terms</Link>
-          <Link to="/admin" className="hover:text-blue-400 font-medium">Admin Portal</Link>
+          <Link
+            to="/admin/login"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/25 text-slate-200 hover:text-white hover:border-white/60 hover:bg-white/10 font-semibold transition"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" /> Admin Login
+          </Link>
         </div>
       </div>
     </footer>

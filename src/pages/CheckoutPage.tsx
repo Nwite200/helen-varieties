@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Check, 
@@ -14,9 +14,13 @@ import {
   Phone,
   Info,
   FileText,
-  Loader2
+  Loader2,
+  Printer,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { buildInvoiceHtml, openInvoice } from '../lib/invoice';
+import { Order } from '../types';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, formatPrice, createOrder, user } = useApp();
@@ -41,6 +45,17 @@ export const CheckoutPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState('');
   const [trackingSecret, setTrackingSecret] = useState('');
+  // The finished order, kept so the receipt can pop up right after checkout
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+
+  // Let the customer close the receipt with the Escape key
+  useEffect(() => {
+    if (!showReceipt) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowReceipt(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showReceipt]);
   const [errorMessage, setErrorMessage] = useState('');
 
   const subtotal = cart.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
@@ -148,9 +163,13 @@ export const CheckoutPage: React.FC = () => {
       });
 
       setCreatedOrderNumber(newOrder.orderNumber);
-      setTrackingSecret(secret);
+      // Show the secret the server actually saved (it generates its own), falling back to the local one
+      setTrackingSecret(newOrder.trackingSecret || secret);
+      setCreatedOrder(newOrder);
       setIsSubmitting(false);
       setCurrentStep(4);
+      setShowReceipt(true); // pop the receipt up immediately
+      window.scrollTo({ top: 0 });
     }, 1000);
   };
 
@@ -595,12 +614,13 @@ export const CheckoutPage: React.FC = () => {
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link
-              to={`/invoice/${createdOrderNumber}`}
+            <button
+              type="button"
+              onClick={() => setShowReceipt(true)}
               className="flex-1 py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white font-bold text-xs rounded-xl shadow-sm transition text-center flex items-center justify-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" /> View & Print Receipt
-            </Link>
+            </button>
             <Link
               to="/track"
               className="flex-1 py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm transition text-center"
@@ -613,6 +633,51 @@ export const CheckoutPage: React.FC = () => {
             >
               Continue Sourcing
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt pop-up shown right after the order is placed */}
+      {showReceipt && createdOrder && (
+        <div
+          className="fixed inset-0 z-[100] bg-slate-900/70 flex items-center justify-center p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Order receipt"
+          onClick={() => setShowReceipt(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[94vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200">
+              <div className="min-w-0">
+                <h3 className="text-sm font-extrabold text-slate-900">Your Receipt</h3>
+                <p className="text-[11px] text-slate-500 truncate">Order {createdOrder.orderNumber} — keep this for your records</p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => openInvoice(createdOrder)}
+                  className="px-3 py-2 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-lg flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowReceipt(false)}
+                  aria-label="Close receipt"
+                  className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <iframe
+              title="Order receipt"
+              srcDoc={buildInvoiceHtml(createdOrder)}
+              className="w-full flex-1 min-h-[60vh] border-0"
+            />
           </div>
         </div>
       )}

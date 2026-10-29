@@ -727,7 +727,7 @@ export const AdminAppLayout: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Link to={`/invoice/${o.orderNumber}`} className="text-xs font-bold text-[#0070DC] hover:underline flex items-center gap-1">
+                    <Link to={`/invoice/${encodeURIComponent(o.orderNumber)}`} className="text-xs font-bold text-[#0070DC] hover:underline flex items-center gap-1">
                       <FileText className="w-3.5 h-3.5" /> Invoice
                     </Link>
                     <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700">
