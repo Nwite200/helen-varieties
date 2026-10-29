@@ -56,7 +56,7 @@ interface AppContextType {
   deleteCustomerAddress: (id: string) => void;
 
   // Admin Auth & Access
-  adminLogin: (email: string, password?: string) => { success: boolean; error?: string };
+  adminLogin: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   adminLogout: () => void;
   logAuditEvent: (action: string, target: string, details: string) => void;
 
@@ -74,6 +74,8 @@ interface AppContextType {
   formatPrice: (amount: number) => string;
   getWhatsAppLink: (prefilledText?: string) => string;
 }
+
+const ADMIN_TOKEN_KEY = 'hv_admin_token';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -181,6 +183,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (adminUser) localStorage.setItem('hv_admin_session', JSON.stringify(adminUser));
     else localStorage.removeItem('hv_admin_session');
   }, [adminUser]);
+
+  // A saved admin session is only trusted if the server confirms its token is still genuine.
+  // This also removes any "admin" session someone planted by hand in browser storage.
+  useEffect(() => {
+    if (!adminUser) return;
+    let cancelled = false;
+    const token = (() => { try { return localStorage.getItem(ADMIN_TOKEN_KEY); } catch { return null; } })();
+    const reject = () => {
+      if (cancelled) return;
+      try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* ignore */ }
+      setAdminUser(null);
+    };
+    if (!token) { reject(); return; }
+    fetch('/api/admin/verify', { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => { if (res.status === 401 || res.status === 403) reject(); })
+      .catch(() => { /* offline: keep the session until the server can be reached */ });
+    return () => { cancelled = true; };
+    // Only on first load of a saved session
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => { localStorage.setItem('hv_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
   useEffect(() => { localStorage.setItem('hv_whatsapp_convs', JSON.stringify(whatsappConversations)); }, [whatsappConversations]);
   useEffect(() => { localStorage.setItem('hv_whatsapp_config', JSON.stringify(whatsappConfig)); }, [whatsappConfig]);
@@ -441,29 +463,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Admin Authentication & Access
-  const adminLogin = (email: string, password?: string) => {
+  // The login is checked on the server (Cloudflare secrets); the browser only holds a signed, expiring token.
+  const adminLogin = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.toLowerCase().trim();
-    // Validate that only privileged admin identities can access administrative dashboard
-    if (cleanEmail === 'admin@helenvarieties.com' || cleanEmail.includes('admin') || password === 'admin123') {
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: password || '' }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok || !data.token) {
+        return { success: false, error: data.error || 'Invalid administrator credentials. Access restricted to authorized personnel.' };
+      }
+      try { localStorage.setItem(ADMIN_TOKEN_KEY, data.token); } catch { /* storage unavailable */ }
       const adminSession: User = {
         id: 'admin-super',
         name: 'Helen Varieties Super Admin',
-        email: cleanEmail,
+        email: data.user?.email || cleanEmail,
         phone: '+234 703 258 3937',
         role: 'super_admin',
         createdAt: '2026-10-01'
       };
       setAdminUser(adminSession);
-      logAuditEvent('ADMIN_LOGIN', cleanEmail, 'Super Administrator authenticated successfully.');
+      logAuditEvent('ADMIN_LOGIN', adminSession.email, 'Super Administrator authenticated successfully.');
       return { success: true };
+    } catch {
+      return { success: false, error: 'Could not reach the server. Check your internet connection and try again.' };
     }
-    return { success: false, error: 'Invalid administrator credentials. Access restricted to authorized personnel.' };
   };
 
   const adminLogout = () => {
     if (adminUser) {
       logAuditEvent('ADMIN_LOGOUT', adminUser.email, 'Administrator logged out of session.');
     }
+    try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* ignore */ }
     setAdminUser(null);
   };
 
