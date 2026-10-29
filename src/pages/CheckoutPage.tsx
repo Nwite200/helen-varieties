@@ -103,7 +103,7 @@ export const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
     setErrorMessage('');
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const orderItems = cart.map(i => ({
         productId: i.productId,
         productName: i.product.name,
@@ -118,7 +118,7 @@ export const CheckoutPage: React.FC = () => {
       const secret = Math.random().toString(36).substring(2, 9);
       const isGuest = !user || checkoutMode === 'guest';
 
-      const newOrder = createOrder({
+      const newOrder = await createOrder({
         customerName: fullName.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim(),

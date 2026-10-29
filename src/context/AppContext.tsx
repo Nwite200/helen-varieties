@@ -39,7 +39,7 @@ interface AppContextType {
   toggleWishlist: (productId: string) => void;
   
   // Order Actions
-  createOrder: (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => Order;
+  createOrder: (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: OrderStatus, note?: string) => void;
   
   // Product Actions
@@ -269,7 +269,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Order management
-  const createOrder = (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>): Order => {
+  const createOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>): Promise<Order> => {
+    // Try the server (D1) first so orders are persisted and trackable across devices.
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: orderData.customerName,
+          customerEmail: orderData.customerEmail,
+          customerPhone: orderData.customerPhone,
+          deliveryAddress: orderData.deliveryAddress,
+          items: orderData.items,
+          isGuest: orderData.isGuest,
+          paymentMethod: orderData.paymentMethod,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json() as any;
+        const newOrder: Order = {
+          ...orderData,
+          id: `ord-${Date.now()}`,
+          orderNumber: data.orderNumber,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          status: 'Pending Payment',
+          paymentStatus: 'Unpaid',
+          trackingSecret: data.trackingSecret,
+          sourcingNotes: [
+            { date: new Date().toLocaleString(), message: 'Pre-order created. Initial product procurement funds pending confirmation.' }
+          ],
+        };
+        setOrders(prev => [newOrder, ...prev]);
+        logAuditEvent('CREATE_ORDER', newOrder.orderNumber, `Order placed by ${orderData.customerName} for ${formatPrice(orderData.totalAmount)}`);
+        clearCart();
+        return newOrder;
+      }
+    } catch {
+      // Fall through to local generation when the API is unavailable (local dev / offline).
+    }
+
+    // Stateless fallback (no DB) — keeps the app usable in local dev.
     const newOrderNumber = `#HV00${124 + orders.length}`;
     const newOrder: Order = {
       ...orderData,
@@ -278,11 +317,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: 'Pending Payment',
       paymentStatus: 'Unpaid',
+      trackingSecret: Math.random().toString(36).substring(2, 10),
       sourcingNotes: [
-        {
-          date: new Date().toLocaleString(),
-          message: 'Pre-order created. Initial product procurement funds pending confirmation.'
-        }
+        { date: new Date().toLocaleString(), message: 'Pre-order created. Initial product procurement funds pending confirmation.' }
       ]
     };
     setOrders(prev => [newOrder, ...prev]);

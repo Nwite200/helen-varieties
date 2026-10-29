@@ -72,6 +72,46 @@ export default {
         // Generate unique order number
         const orderNumber = `#HV${Math.floor(100000 + Math.random() * 900000)}`;
         const trackingSecret = Math.random().toString(36).substring(2, 10);
+        const orderId = `ord-${Date.now()}`;
+        const subtotal = items.reduce((s: number, it: any) => s + (Number(it.unitPrice) || 0) * (Number(it.quantity) || 0), 0);
+        const now = new Date().toISOString();
+
+        // Persist to D1 when available (production). Stateless fallback in local dev.
+        if (env.DB) {
+          try {
+            await env.DB.prepare(
+              `INSERT INTO orders (id, order_number, customer_id, customer_name, customer_email, customer_phone, is_guest, delivery_street, delivery_city, delivery_state, subtotal, shipping_note, total_amount, status, payment_method, payment_status, payment_reference, source, tracking_secret, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(
+              orderId, orderNumber, null, customerName.trim(),
+              customerEmail ? customerEmail.trim() : null,
+              customerPhone ? customerPhone.trim() : null,
+              isGuest ? 1 : 0,
+              deliveryAddress.address, deliveryAddress.city, deliveryAddress.state,
+              subtotal,
+              'Not included. Will be shared separately after order confirmation and cargo arrival.',
+              subtotal, 'Pending Payment', body.paymentMethod || 'Paystack / Online Transfer',
+              'Unpaid', null, 'website', trackingSecret, now
+            ).run();
+
+            for (const it of items) {
+              await env.DB.prepare(
+                `INSERT INTO order_items (id, order_id, product_id, product_name, sku, selected_variants, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              ).bind(
+                `oi-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                orderId, it.productId || null, it.productName || it.name || 'Item',
+                it.sku || '', JSON.stringify(it.selectedVariants || {}),
+                Number(it.quantity) || 1, Number(it.unitPrice) || 0,
+                (Number(it.unitPrice) || 0) * (Number(it.quantity) || 1)
+              ).run();
+            }
+
+            await env.DB.prepare(
+              `INSERT INTO order_sourcing_notes (id, order_id, date, message) VALUES (?, ?, ?, ?)`
+            ).bind(`sn-${Date.now()}`, orderId, now, 'Order created. Initial product procurement funds pending confirmation.').run();
+          } catch (err: any) {
+            return Response.json({ error: 'Failed to persist order: ' + (err.message || 'DB error') }, { status: 500, headers: corsHeaders });
+          }
+        }
 
         return Response.json({
           success: true,
@@ -88,6 +128,68 @@ export default {
       // 3.5. Secure Text-to-Speech (provider credentials stay server-side)
       if (path === '/api/tts') {
         return ttsHandler.handle(request, env);
+      }
+
+      // 2b. Track an order by number + secret (D1)
+      if (path.startsWith('/api/orders/') && method === 'GET') {
+        const orderNumber = decodeURIComponent(path.replace('/api/orders/', ''));
+        const secret = url.searchParams.get('secret');
+        if (!orderNumber) {
+          return Response.json({ error: 'Order number required.' }, { status: 400, headers: corsHeaders });
+        }
+        if (!env.DB) {
+          return Response.json({ error: 'Database not available.' }, { status: 503, headers: corsHeaders });
+        }
+        const order = await env.DB.prepare('SELECT * FROM orders WHERE order_number = ?').bind(orderNumber).first();
+        if (!order) {
+          return Response.json({ error: 'Order not found.' }, { status: 404, headers: corsHeaders });
+        }
+        if (secret && order.tracking_secret && secret !== order.tracking_secret) {
+          return Response.json({ error: 'Invalid tracking secret.' }, { status: 403, headers: corsHeaders });
+        }
+        const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(order.id).all();
+        const notesRes = await env.DB.prepare('SELECT * FROM order_sourcing_notes WHERE order_id = ? ORDER BY created_at').bind(order.id).all();
+        const safeJson = (s: any, fallback: any) => { try { return JSON.parse(s); } catch { return fallback; } };
+        return Response.json({
+          success: true,
+          order: {
+            id: order.id,
+            orderNumber: order.order_number,
+            date: order.created_at,
+            customerName: order.customer_name,
+            customerEmail: order.customer_email,
+            customerPhone: order.customer_phone,
+            isGuest: Boolean(order.is_guest),
+            deliveryAddress: {
+              fullName: order.customer_name,
+              phone: order.customer_phone || '',
+              email: order.customer_email || '',
+              address: order.delivery_street,
+              city: order.delivery_city,
+              state: order.delivery_state,
+            },
+            items: (itemsRes.results || []).map((it: any) => ({
+              productId: it.product_id,
+              productName: it.product_name,
+              productImage: '',
+              sku: it.sku,
+              selectedVariants: safeJson(it.selected_variants, {}),
+              quantity: it.quantity,
+              unitPrice: it.unit_price,
+              totalPrice: it.total_price,
+            })),
+            subtotal: order.subtotal,
+            shippingNote: order.shipping_note,
+            totalAmount: order.total_amount,
+            status: order.status,
+            paymentMethod: order.payment_method,
+            paymentStatus: order.payment_status,
+            paymentReference: order.payment_reference,
+            source: order.source,
+            trackingSecret: order.tracking_secret,
+            sourcingNotes: (notesRes.results || []).map((n: any) => ({ date: n.date, message: n.message })),
+          }
+        }, { headers: corsHeaders });
       }
 
       // 3. Admin Verification Endpoint
