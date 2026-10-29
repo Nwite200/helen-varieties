@@ -10,7 +10,8 @@ import {
   MapPin, 
   ChevronRight,
   Globe2,
-  Plane
+  Plane,
+  Heart
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -191,11 +192,29 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Copyright */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
-        <p>© 2026 Helen Varieties Venture. All rights reserved.</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16 flex flex-col md:flex-row items-center md:items-start justify-between text-xs text-slate-400 gap-4">
+        <div className="space-y-1.5 text-center md:text-left">
+          <p>© 2026 · HELEN'S VARIETIES All rights reserved.</p>
+          <p className="flex items-center justify-center md:justify-start gap-1.5 flex-wrap">
+            Made with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" aria-label="love" /> for healthy Nigerian families nationwide &amp; beyond
+          </p>
+          <p>
+            Maintained by TK Software Solutions —{' '}
+            <a href="tel:07062129563" className="hover:text-white transition">07062129563</a>
+            {' '}•{' '}
+            <a
+              href="https://wa.me/2347062129563"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-400 hover:text-emerald-300 transition"
+            >
+              WhatsApp
+            </a>
+          </p>
+        </div>
         <div className="flex items-center gap-4">
-          <Link to="/privacy" className="hover:text-slate-500">Privacy</Link>
-          <Link to="/terms" className="hover:text-slate-500">Terms</Link>
+          <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
+          <Link to="/terms" className="hover:text-white transition">Terms</Link>
           <Link
             to="/admin/login"
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/25 text-slate-200 hover:text-white hover:border-white/60 hover:bg-white/10 font-semibold transition"
