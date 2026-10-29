@@ -16,6 +16,7 @@ import {
   LogOut, 
   Plus, 
   Trash2,
+  Pencil,
   X,
   Check, 
   AlertTriangle, 
@@ -46,6 +47,7 @@ export const AdminAppLayout: React.FC = () => {
     resolveWhatsAppEscalation,
     updateOrderStatus,
     addProduct,
+    updateProduct,
     deleteProduct,
     formatPrice,
     aiConfig,
@@ -142,6 +144,27 @@ export const AdminAppLayout: React.FC = () => {
 
   // State for product modal
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const openEditProduct = (p: Product) => {
+    setEditingProduct(p);
+    setPName(p.name);
+    setPSku(p.sku);
+    setPPrice(p.price);
+    setPCategory(p.category);
+    setPImages(p.images && p.images.length ? p.images : [p.primaryImage]);
+    setShowAddProductModal(true);
+  };
+
+  const resetProductForm = () => {
+    setEditingProduct(null);
+    setPName('');
+    setPSku('HV-SRC-' + Math.floor(100 + Math.random() * 900));
+    setPPrice(18500);
+    setPCategory('Electronics & Gadgets');
+    setPImages(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
+    setPImageUrlInput('');
+  };
   const [pName, setPName] = useState('');
   const [pCategory, setPCategory] = useState('Electronics & Gadgets');
   const [pPrice, setPPrice] = useState(18500);
@@ -203,24 +226,38 @@ export const AdminAppLayout: React.FC = () => {
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    addProduct({
-      sku: pSku,
-      name: pName,
-      category: pCategory,
-      description: 'Verified 1688 wholesale product sourced directly from Guangzhou.',
-      price: Number(pPrice),
-      rating: 5.0,
-      reviewsCount: 1,
-      primaryImage: pImages[0] || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80',
-      images: pImages.length ? pImages : ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80'],
-      variants: [{ name: 'Option', options: ['Default'] }],
-      specifications: { 'Procurement Origin': '1688 Verified Supplier' },
-      isFeatured: true,
-      isPreOrder: true,
-      sourcingTimeframe: '10 - 15 working days'
-    });
+    const primaryImage = pImages[0] || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80';
+    const images = pImages.length ? pImages : [primaryImage];
+    if (editingProduct) {
+      updateProduct({
+        ...editingProduct,
+        sku: pSku,
+        name: pName,
+        category: pCategory,
+        price: Number(pPrice),
+        primaryImage,
+        images,
+      });
+    } else {
+      addProduct({
+        sku: pSku,
+        name: pName,
+        category: pCategory,
+        description: 'Verified 1688 wholesale product sourced directly from Guangzhou.',
+        price: Number(pPrice),
+        rating: 5.0,
+        reviewsCount: 1,
+        primaryImage,
+        images,
+        variants: [{ name: 'Option', options: ['Default'] }],
+        specifications: { 'Procurement Origin': '1688 Verified Supplier' },
+        isFeatured: true,
+        isPreOrder: true,
+        sourcingTimeframe: '10 - 15 working days'
+      });
+    }
     setShowAddProductModal(false);
-    setPName('');
+    resetProductForm();
   };
 
   const handleSendAdminReply = (e: React.FormEvent) => {
@@ -611,7 +648,7 @@ export const AdminAppLayout: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setShowAddProductModal(true)}
+                onClick={() => { resetProductForm(); setShowAddProductModal(true); }}
                 className="px-4 py-2 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" /> Add Item
@@ -628,8 +665,16 @@ export const AdminAppLayout: React.FC = () => {
                     <span className="text-[10px] text-slate-400 font-mono">SKU: {p.sku}</span>
                   </div>
                   <button
+                    onClick={() => openEditProduct(p)}
+                    className="p-2 text-[#0070DC] hover:bg-blue-50 rounded-xl"
+                    title="Edit product"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => deleteProduct(p.id)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-xl"
+                    title="Delete product"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -1033,7 +1078,7 @@ export const AdminAppLayout: React.FC = () => {
       {showAddProductModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">Add 1688 Sourced Product</h3>
+            <h3 className="text-base font-extrabold text-slate-900">{editingProduct ? 'Edit Product' : 'Add 1688 Sourced Product'}</h3>
             <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Product Title</label>
@@ -1129,7 +1174,7 @@ export const AdminAppLayout: React.FC = () => {
               <div className="flex gap-2 justify-end pt-3">
                 <button
                   type="button"
-                  onClick={() => setShowAddProductModal(false)}
+                  onClick={() => { setShowAddProductModal(false); resetProductForm(); }}
                   className="px-4 py-2 border rounded-xl font-semibold"
                 >
                   Cancel
@@ -1138,7 +1183,7 @@ export const AdminAppLayout: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-[#0070DC] text-white font-bold rounded-xl"
                 >
-                  Publish to Catalogue
+                  {editingProduct ? 'Save Changes' : 'Publish to Catalogue'}
                 </button>
               </div>
             </form>
