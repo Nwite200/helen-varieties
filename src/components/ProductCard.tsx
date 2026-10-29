@@ -93,7 +93,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
           </div>
 
           <Link to={`/product/${product.id}`}>
-            <h3 className="font-bold text-sm text-slate-800 hover:text-[#0070DC] transition line-clamp-2 leading-snug">
+            <h3 className="font-bold text-base text-slate-800 hover:text-[#0070DC] transition line-clamp-2 leading-snug">
               {product.name}
             </h3>
           </Link>
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
         <div className="mt-4 pt-3 border-t border-slate-100">
           <div className="flex items-baseline justify-between mb-2">
             <div>
-              <span className="text-base font-extrabold text-[#0070DC]">
+              <span className="font-heading text-xl font-bold text-[#0070DC]">
                 {formatPrice(product.price)}
               </span>
               <p className="text-[10px] text-slate-600">Excl. intl shipping</p>

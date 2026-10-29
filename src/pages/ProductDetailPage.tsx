@@ -150,7 +150,7 @@ export const ProductDetailPage: React.FC = () => {
           {/* Price Box */}
           <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-100 flex items-baseline justify-between">
             <div>
-              <span className="text-3xl font-extrabold text-[#0070DC]">
+              <span className="font-heading text-4xl font-bold text-[#0070DC]">
                 {formatPrice(product.price)}
               </span>
               <p className="text-xs text-slate-500 mt-0.5">
