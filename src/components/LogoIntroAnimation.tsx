@@ -74,7 +74,7 @@ export const LogoIntroAnimation: React.FC = () => {
           <div className="w-28 h-28 sm:w-36 sm:h-36 bg-white rounded-3xl p-3 shadow-2xl shadow-blue-500/25 border border-blue-50 flex items-center justify-center">
             <img
               src={logoImg}
-              alt="Helen Varieties Venture Logo"
+              alt="Helen’s Varieties Venture Logo"
               className="w-full h-full object-contain"
               loading="eager"
             />
@@ -91,7 +91,7 @@ export const LogoIntroAnimation: React.FC = () => {
           }}
         >
           <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
-            Helen<span className="text-[#0070DC]"> Varieties</span>
+            Helen’s<span className="text-[#0070DC]"> Varieties</span>
           </h2>
           <p className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
             Discover More • Pre-Order with Confidence
