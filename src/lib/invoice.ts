@@ -9,6 +9,12 @@ export function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString()}`;
 }
 
+// Absolute URL so the logo also loads when the receipt opens in its own tab (blob: URL) or prints.
+function assetUrl(path: string): string {
+  const origin = typeof window !== 'undefined' && window.location?.origin?.startsWith('http') ? window.location.origin : '';
+  return `${origin}${path}`;
+}
+
 function escapeHtml(s: string): string {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -40,11 +46,14 @@ export function buildInvoiceHtml(order: Order): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice ${escapeHtml(order.orderNumber)} — ${BRAND_NAME}</title>
+  <link rel="icon" type="image/png" href="${assetUrl('/favicon-32x32.png')}" />
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Poppins', 'Segoe UI', Arial, sans-serif; margin: 0; padding: 24px; color: #191919; background: #f7f7f8; }
     .sheet { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0070DC; padding-bottom: 16px; margin-bottom: 20px; }
+    .brandrow { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 56px; height: 56px; object-fit: contain; flex-shrink: 0; }
     .brand { font-size: 20px; font-weight: 800; color: #0070DC; }
     .tagline { font-size: 11px; color: #64748b; margin-top: 2px; }
     .inv-title { font-size: 18px; font-weight: 800; color: #191919; text-align: right; }
@@ -72,10 +81,13 @@ export function buildInvoiceHtml(order: Order): string {
 <body>
   <div class="sheet">
     <div class="header">
-      <div>
+      <div class="brandrow">
+        <img class="logo" src="${assetUrl('/icon-192.png')}" alt="" width="56" height="56" />
+        <div>
         <div class="brand">${BRAND_NAME}</div>
         <div class="tagline">${BRAND_TAGLINE}</div>
         <div style="font-size:10px;color:#94a3b8;margin-top:6px;">WhatsApp: ${WHATSAPP_PHONE}</div>
+        </div>
       </div>
       <div>
         <div class="inv-title">RECEIPT / INVOICE</div>
