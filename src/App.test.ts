@@ -4,7 +4,7 @@ import { DEFAULT_WHATSAPP_CONFIG, DEFAULT_AI_CONFIG, INITIAL_WHATSAPP_CONVERSATI
 import { buildProductWhatsAppMessage, buildCartWhatsAppMessage, WHATSAPP_URL } from './lib/whatsappMessages';
 import { generateAIReply, formatPrice } from './lib/aiResponses';
 
-describe('Helen Varieties Core Business Workflows', () => {
+describe('Helen’s Varieties Core Business Workflows', () => {
   it('loads valid initial products from 1688 and international suppliers', () => {
     expect(INITIAL_PRODUCTS.length).toBeGreaterThan(0);
     const firstProduct = INITIAL_PRODUCTS[0];
