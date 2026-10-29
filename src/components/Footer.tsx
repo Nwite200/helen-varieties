@@ -196,7 +196,7 @@ export const Footer: React.FC = () => {
         <div className="flex items-center gap-4">
           <Link to="/privacy" className="hover:text-slate-500">Privacy</Link>
           <Link to="/terms" className="hover:text-slate-500">Terms</Link>
-          <Link to="/admin" className="hover:text-blue-400 font-medium">Admin Portal</Link>
+          <Link to="/admin/login" className="text-xs font-semibold text-white bg-white/10 hover:bg-[#0070DC] border border-white/20 px-3 py-1 rounded-full transition">Admin Login</Link>
         </div>
       </div>
     </footer>

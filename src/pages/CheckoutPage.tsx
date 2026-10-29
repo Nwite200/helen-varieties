@@ -14,9 +14,14 @@ import {
   Phone,
   Info,
   FileText,
-  Loader2
+  Loader2,
+  Printer,
+  MessageCircle,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import type { Order } from '../types';
+import { buildInvoiceHtml, openInvoice, invoicePath, WHATSAPP_LINK } from '../lib/invoice';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, formatPrice, createOrder, user } = useApp();
@@ -41,6 +46,8 @@ export const CheckoutPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState('');
   const [trackingSecret, setTrackingSecret] = useState('');
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const subtotal = cart.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
@@ -148,7 +155,10 @@ export const CheckoutPage: React.FC = () => {
       });
 
       setCreatedOrderNumber(newOrder.orderNumber);
-      setTrackingSecret(secret);
+      // Show the secret the server actually stored (falls back to the local one offline)
+      setTrackingSecret(newOrder.trackingSecret || secret);
+      setPlacedOrder(newOrder);
+      setShowReceipt(true); // pop the receipt up straight away
       setIsSubmitting(false);
       setCurrentStep(4);
     }, 1000);
@@ -595,12 +605,13 @@ export const CheckoutPage: React.FC = () => {
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <Link
-              to={`/invoice/${createdOrderNumber}`}
+            <button
+              type="button"
+              onClick={() => setShowReceipt(true)}
               className="flex-1 py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white font-bold text-xs rounded-xl shadow-sm transition text-center flex items-center justify-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" /> View & Print Receipt
-            </Link>
+            </button>
             <Link
               to="/track"
               className="flex-1 py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm transition text-center"
@@ -613,6 +624,78 @@ export const CheckoutPage: React.FC = () => {
             >
               Continue Sourcing
             </Link>
+          </div>
+        </div>
+      )}
+      {/* RECEIPT POP-UP (opens automatically after an order is placed) */}
+      {showReceipt && placedOrder && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Order receipt"
+          onClick={() => setShowReceipt(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-extrabold text-slate-900 truncate">Order placed — your receipt</p>
+                  <p className="text-[11px] text-slate-500 font-mono truncate">{placedOrder.orderNumber}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReceipt(false)}
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition"
+                aria-label="Close receipt"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <iframe
+              title="Order receipt"
+              srcDoc={buildInvoiceHtml(placedOrder)}
+              className="w-full flex-1 min-h-[420px] border-0 bg-white"
+            />
+
+            <div className="flex flex-col sm:flex-row gap-2 px-4 py-3 border-t border-slate-200 bg-slate-50">
+              <button
+                type="button"
+                onClick={() => openInvoice(placedOrder)}
+                className="flex-1 py-2.5 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5"
+              >
+                <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+              </button>
+              <a
+                href={`${WHATSAPP_LINK}?text=${encodeURIComponent(`Hello Helen's Varieties Venture. Here is my order ${placedOrder.orderNumber} (total ${formatPrice(placedOrder.totalAmount)}). Please confirm and advise on shipping.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5"
+              >
+                <MessageCircle className="w-3.5 h-3.5 fill-white" /> Send to WhatsApp
+              </a>
+              <Link
+                to={invoicePath(placedOrder.orderNumber)}
+                className="flex-1 py-2.5 border border-slate-300 text-slate-700 hover:bg-white text-xs font-bold rounded-xl transition text-center"
+              >
+                Open full page
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowReceipt(false)}
+                className="flex-1 py-2.5 border border-slate-300 text-slate-700 hover:bg-white text-xs font-bold rounded-xl transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
+  Lock,
   Search, 
   ShoppingCart, 
   Heart, 
@@ -69,6 +70,9 @@ export const Navbar: React.FC = () => {
             </Link>
             <Link to="/contact" className="hover:underline flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5" /> Help Center
+            </Link>
+            <Link to="/admin/login" className="flex items-center gap-1 bg-white/15 hover:bg-white/25 px-2.5 py-0.5 rounded-full font-semibold transition">
+              <Lock className="w-3.5 h-3.5" /> Admin
             </Link>
             <a href="tel:+2348000000000" className="hover:underline flex items-center gap-1">
               <Phone className="w-3.5 h-3.5" /> Contact Us
@@ -379,6 +383,13 @@ export const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            <Link
+              to="/admin/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-[#0070DC] rounded-lg flex items-center gap-2"
+            >
+              <Lock className="w-4 h-4" /> Admin Login
+            </Link>
           </nav>
 
           <div className="pt-3 border-t border-slate-100">

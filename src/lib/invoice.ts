@@ -5,6 +5,12 @@ export const BRAND_TAGLINE = 'Discover More. Pre-Order with Confidence.';
 export const WHATSAPP_PHONE = '07032583937';
 export const WHATSAPP_LINK = 'https://wa.me/2347032583937';
 
+/** Path to the receipt page. Order numbers start with '#', which must be URL-encoded
+ *  or the browser treats everything after it as a fragment and the page is blank. */
+export function invoicePath(orderNumber: string): string {
+  return `/invoice/${encodeURIComponent(orderNumber)}`;
+}
+
 export function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString()}`;
 }
