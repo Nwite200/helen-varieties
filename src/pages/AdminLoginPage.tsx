@@ -97,12 +97,6 @@ export const AdminLoginPage: React.FC = () => {
         </form>
 
         <div className="pt-4 border-t border-white/10 space-y-3 text-center text-xs">
-          <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-left">
-            <p className="text-[11px] font-bold text-blue-300 mb-1">Pre-provisioned Super Admin Demo:</p>
-            <p className="text-[10px] text-slate-500 font-mono">Email: admin@helenvarieties.com</p>
-            <p className="text-[10px] text-slate-500 font-mono">Passkey: admin123</p>
-          </div>
-
           <Link to="/" className="inline-block text-slate-500 hover:text-white transition text-xs">
             ← Return to Public Website
           </Link>
