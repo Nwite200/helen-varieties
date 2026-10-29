@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-bold text-white">Pre-Order Products</h4>
-              <p className="text-xs text-slate-400">From Trusted Suppliers</p>
+              <p className="text-xs text-slate-500">From Trusted Suppliers</p>
             </div>
           </div>
 
@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-bold text-white">Transparent Process</h4>
-              <p className="text-xs text-slate-400">No hidden charges</p>
+              <p className="text-xs text-slate-500">No hidden charges</p>
             </div>
           </div>
 
@@ -46,7 +46,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-bold text-white">Global Delivery</h4>
-              <p className="text-xs text-slate-400">To your doorstep</p>
+              <p className="text-xs text-slate-500">To your doorstep</p>
             </div>
           </div>
 
@@ -56,7 +56,7 @@ export const Footer: React.FC = () => {
             </div>
             <div>
               <h4 className="text-sm font-bold text-white">Dedicated Support</h4>
-              <p className="text-xs text-slate-400">We're here to help</p>
+              <p className="text-xs text-slate-500">We're here to help</p>
             </div>
           </div>
         </div>
@@ -68,11 +68,11 @@ export const Footer: React.FC = () => {
           {/* Brand info */}
           <div className="lg:col-span-2 space-y-4">
             <Logo size="lg" theme="light" />
-            <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+            <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
               Helen Varieties Venture is your premier international sourcing partner. 
               We connect Nigerian consumers and businesses directly with verified factories on 1688 and global manufacturers with transparent pre-order tracking.
             </p>
-            <div className="flex items-center gap-3 text-xs text-slate-400 pt-2">
+            <div className="flex items-center gap-3 text-xs text-slate-500 pt-2">
               <span className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
                 <Plane className="w-4 h-4 text-blue-400" /> Air & Sea Cargo
               </span>
@@ -149,7 +149,7 @@ export const Footer: React.FC = () => {
           {/* Contact details */}
           <div className="space-y-3">
             <h5 className="text-sm font-bold text-white uppercase tracking-wider">Contact Us</h5>
-            <div className="space-y-2 text-xs text-slate-400">
+            <div className="space-y-2 text-xs text-slate-500">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                 <span>Lagos Mainland Logistics Hub & Pickup Point, Nigeria</span>
@@ -184,7 +184,7 @@ export const Footer: React.FC = () => {
 
       {/* Mandatory Shipping Disclaimer Bar */}
       <div className="bg-slate-950 py-4 px-4 border-t border-slate-800 text-center">
-        <div className="max-w-5xl mx-auto text-[11px] text-slate-400 leading-normal">
+        <div className="max-w-5xl mx-auto text-[11px] text-slate-500 leading-normal">
           <span className="font-bold text-amber-400">Important Shipping Notice: </span>
           Product price excludes international shipping, customs charges, and other applicable delivery fees unless explicitly stated. Final shipping and additional charges will be communicated according to the order's sourcing and delivery arrangements.
         </div>
@@ -194,8 +194,8 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
         <p>© 2026 Helen Varieties Venture. All rights reserved.</p>
         <div className="flex items-center gap-4">
-          <Link to="/privacy" className="hover:text-slate-400">Privacy</Link>
-          <Link to="/terms" className="hover:text-slate-400">Terms</Link>
+          <Link to="/privacy" className="hover:text-slate-500">Privacy</Link>
+          <Link to="/terms" className="hover:text-slate-500">Terms</Link>
           <Link to="/admin" className="hover:text-blue-400 font-medium">Admin Portal</Link>
         </div>
       </div>

@@ -45,7 +45,7 @@ export const ContactPage: React.FC = () => {
                 <div>
                   <h4 className="font-bold text-slate-800">Direct WhatsApp / Call Line</h4>
                   <p className="mt-0.5">+234 (0) 801 234 5678</p>
-                  <p className="text-slate-400 text-[10px]">Monday - Saturday, 8:00 AM - 6:00 PM WAT</p>
+                  <p className="text-slate-500 text-[10px]">Monday - Saturday, 8:00 AM - 6:00 PM WAT</p>
                 </div>
               </div>
 

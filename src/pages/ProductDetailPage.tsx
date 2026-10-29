@@ -15,7 +15,8 @@ import {
   Layers,
   ChevronRight,
   Info,
-  MessageCircle
+  MessageCircle,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { buildProductWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages';
@@ -41,6 +42,7 @@ export const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
   const [addedToast, setAddedToast] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (!product) {
     return (
@@ -108,12 +110,13 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Primary Main Display */}
-          <div className="flex-1 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 relative aspect-square flex items-center justify-center">
+          <div className="flex-1 rounded-2xl overflow-hidden bg-slate-50 border border-slate-200 relative aspect-square flex items-center justify-center cursor-zoom-in" onClick={() => setLightboxOpen(true)}>
             <img
               src={selectedImage || product.primaryImage}
               alt={product.name}
               className="w-full h-full object-cover"
             />
+            <span className="absolute bottom-3 right-3 bg-black/50 text-white text-[9px] font-bold px-2 py-1 rounded">Click to zoom</span>
             <span className="absolute top-4 left-4 bg-[#0070DC] text-white text-[10px] font-extrabold px-2.5 py-1 rounded shadow uppercase tracking-wide">
               Verified 1688 Sourcing
             </span>
@@ -125,7 +128,7 @@ export const ProductDetailPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
               <span className="uppercase font-bold tracking-wider text-[#0070DC]">{product.category}</span>
-              <span className="font-mono text-slate-400">SKU: {product.sku}</span>
+              <span className="font-mono text-slate-500">SKU: {product.sku}</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-snug">
@@ -394,7 +397,7 @@ export const ProductDetailPage: React.FC = () => {
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="font-bold text-xs text-slate-800">Chinedu O.</span>
-                  <span className="text-[11px] text-slate-400">Verified Pre-Order</span>
+                  <span className="text-[11px] text-slate-500">Verified Pre-Order</span>
                 </div>
                 <div className="flex items-center text-amber-400 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -409,6 +412,19 @@ export const ProductDetailPage: React.FC = () => {
           )}
         </div>
       </div>
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4" onClick={() => setLightboxOpen(false)}>
+          <button type="button" onClick={() => setLightboxOpen(false)} className="absolute top-4 right-4 text-white bg-white/20 hover:bg-white/30 rounded-full p-2 transition" aria-label="Close zoom">
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={selectedImage || product.primaryImage}
+            alt={product.name}
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };

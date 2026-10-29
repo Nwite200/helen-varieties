@@ -245,7 +245,7 @@ export const AIAssistant: React.FC = () => {
               <Play className="w-2.5 h-2.5" />
             </button>
           )}
-          <span className={`block mt-1 text-[8px] ${isAi ? 'text-blue-200' : 'text-slate-400'}`}>{msg.time}</span>
+          <span className={`block mt-1 text-[8px] ${isAi ? 'text-blue-200' : 'text-slate-500'}`}>{msg.time}</span>
         </div>
       </div>
     );
@@ -307,7 +307,7 @@ export const AIAssistant: React.FC = () => {
           <button
             type="button"
             onClick={toggleBackground}
-            className="text-slate-400 hover:text-[#0070DC] underline"
+            className="text-slate-500 hover:text-[#0070DC] underline"
             title="Background ambience not configured"
           >
             Ambience not set up
@@ -400,7 +400,7 @@ export const AIAssistant: React.FC = () => {
             <Clock className="w-3.5 h-3.5" /> Track Order
           </Link>
         </div>
-        <p className="text-[9px] text-slate-400 max-w-xs leading-relaxed">
+        <p className="text-[9px] text-slate-500 max-w-xs leading-relaxed">
           Opening WhatsApp starts a conversation with our team — it does not place an order on the website until confirmed.
         </p>
       </div>
@@ -409,12 +409,12 @@ export const AIAssistant: React.FC = () => {
 
   const welcomeCard = () => (
     <div
-      className="fixed z-[60] w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl px-4 py-3.5 animate-in fade-in duration-300 sm:bottom-[92px] sm:right-24 bottom-[20px] right-4 sm:rounded-3xl"
+      className="fixed z-[60] w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl px-4 py-3.5 animate-in fade-in duration-300 sm:bottom-[92px] sm:right-24 bottom-[80px] right-4 sm:rounded-3xl"
     >
       <button
         type="button"
         onClick={dismissWelcome}
-        className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 transition"
+        className="absolute top-2 right-2 text-slate-500 hover:text-slate-600 transition"
         aria-label="Dismiss welcome message"
       >
         <X className="w-4 h-4" />

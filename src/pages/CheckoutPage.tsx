@@ -13,7 +13,8 @@ import {
   Mail,
   Phone,
   Info,
-  FileText
+  FileText,
+  Loader2
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -162,22 +163,22 @@ export const CheckoutPage: React.FC = () => {
         </h1>
 
         <div className="grid grid-cols-4 gap-2 text-center text-xs font-bold">
-          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 1 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-400'}`}>
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 1 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-500'}`}>
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${currentStep >= 1 ? 'bg-[#0070DC] text-white' : 'bg-slate-200 text-slate-600'}`}>1</span>
             <span className="hidden sm:inline">Details & Shipping</span>
           </div>
 
-          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 2 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-400'}`}>
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 2 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-500'}`}>
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${currentStep >= 2 ? 'bg-[#0070DC] text-white' : 'bg-slate-200 text-slate-600'}`}>2</span>
             <span className="hidden sm:inline">Review Order</span>
           </div>
 
-          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 3 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-400'}`}>
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 3 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-500'}`}>
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${currentStep >= 3 ? 'bg-[#0070DC] text-white' : 'bg-slate-200 text-slate-600'}`}>3</span>
             <span className="hidden sm:inline">Payment Option</span>
           </div>
 
-          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 4 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-400'}`}>
+          <div className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 pb-2 border-b-2 ${currentStep >= 4 ? 'border-[#0070DC] text-[#0070DC]' : 'border-slate-200 text-slate-500'}`}>
             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${currentStep >= 4 ? 'bg-[#0070DC] text-white' : 'bg-slate-200 text-slate-600'}`}>4</span>
             <span className="hidden sm:inline">Confirmation</span>
           </div>
@@ -207,7 +208,7 @@ export const CheckoutPage: React.FC = () => {
                     <User className="w-4 h-4" />
                     <span className="text-xs">Continue as Guest</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-normal mt-1">No account creation required.</p>
+                  <p className="text-[10px] text-slate-500 font-normal mt-1">No account creation required.</p>
                 </button>
 
                 <button
@@ -219,7 +220,7 @@ export const CheckoutPage: React.FC = () => {
                     <UserCheck className="w-4 h-4 text-[#0070DC]" />
                     <span className="text-xs font-bold text-slate-800">Sign In</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-normal mt-1">Access saved addresses & history.</p>
+                  <p className="text-[10px] text-slate-500 font-normal mt-1">Access saved addresses & history.</p>
                 </button>
               </div>
             </div>
@@ -264,7 +265,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block font-bold text-slate-700 mb-1.5">
-                  Email Address <span className="font-normal text-slate-400">(Required if no phone)</span>
+                  Email Address <span className="font-normal text-slate-500">(Required if no phone)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -274,13 +275,13 @@ export const CheckoutPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                   />
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 mb-1.5">
-                  WhatsApp Phone Number <span className="font-normal text-slate-400">(Required if no email)</span>
+                  WhatsApp Phone Number <span className="font-normal text-slate-500">(Required if no email)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -290,7 +291,7 @@ export const CheckoutPage: React.FC = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                   />
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 </div>
               </div>
             </div>
@@ -523,7 +524,7 @@ export const CheckoutPage: React.FC = () => {
               className="w-2/3 py-3 bg-[#0070DC] hover:bg-[#005BB5] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
-                <span>Generating Pre-Order...</span>
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating Pre-Order...</>
               ) : (
                 <>
                   <Lock className="w-3.5 h-3.5" /> Submit Pre-Order ({formatPrice(subtotal)})

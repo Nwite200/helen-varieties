@@ -42,7 +42,7 @@ export const AdminLoginPage: React.FC = () => {
             Administrator Gateway
           </h1>
 
-          <p className="text-xs text-slate-400 max-w-xs mx-auto">
+          <p className="text-xs text-slate-500 max-w-xs mx-auto">
             Authorized administrative access for Helen's Varieties Venture management and WhatsApp operations.
           </p>
         </div>
@@ -67,7 +67,7 @@ export const AdminLoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/15 px-3.5 py-2.5 pl-9 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#0070DC]"
               />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
             </div>
           </div>
 
@@ -83,7 +83,7 @@ export const AdminLoginPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/15 px-3.5 py-2.5 pl-9 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-[#0070DC]"
               />
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
             </div>
           </div>
 
@@ -97,7 +97,13 @@ export const AdminLoginPage: React.FC = () => {
         </form>
 
         <div className="pt-4 border-t border-white/10 space-y-3 text-center text-xs">
-          <Link to="/" className="inline-block text-slate-400 hover:text-white transition text-xs">
+          <div className="bg-white/5 p-3 rounded-xl border border-white/10 text-left">
+            <p className="text-[11px] font-bold text-blue-300 mb-1">Pre-provisioned Super Admin Demo:</p>
+            <p className="text-[10px] text-slate-500 font-mono">Email: admin@helenvarieties.com</p>
+            <p className="text-[10px] text-slate-500 font-mono">Passkey: admin123</p>
+          </div>
+
+          <Link to="/" className="inline-block text-slate-500 hover:text-white transition text-xs">
             ← Return to Public Website
           </Link>
         </div>

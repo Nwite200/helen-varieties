@@ -147,7 +147,7 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC] focus:ring-1 focus:ring-[#0070DC]"
                   />
-                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <UserIcon className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 </div>
               </div>
 
@@ -162,9 +162,9 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC] focus:ring-1 focus:ring-[#0070DC]"
                   />
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">Used for WhatsApp AI order tracking and shipping alerts.</p>
+                <p className="text-[10px] text-slate-500 mt-1">Used for WhatsApp AI order tracking and shipping alerts.</p>
               </div>
             </>
           )}
@@ -181,7 +181,7 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC] focus:ring-1 focus:ring-[#0070DC]"
                 />
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               </div>
             </div>
           )}
@@ -205,11 +205,11 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3.5 py-2.5 pl-9 pr-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC] focus:ring-1 focus:ring-[#0070DC]"
                 />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-600"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -229,7 +229,7 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC] focus:ring-1 focus:ring-[#0070DC]"
                 />
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               </div>
             </div>
           )}
@@ -271,7 +271,7 @@ export const CustomerAuthPage: React.FC<{ mode: 'login' | 'register' | 'forgot' 
             </p>
           )}
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>256-bit encrypted authentication guard</span>
           </div>

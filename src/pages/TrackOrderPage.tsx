@@ -57,7 +57,7 @@ export const TrackOrderPage: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-slate-500">
           Tip: Test with active demo orders <button type="button" onClick={() => setOrderQuery('#HV00123')} className="text-[#0070DC] font-mono underline font-bold">#HV00123</button> or <button type="button" onClick={() => setOrderQuery('#HV00122')} className="text-[#0070DC] font-mono underline font-bold">#HV00122</button>
         </p>
 
@@ -73,7 +73,7 @@ export const TrackOrderPage: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-md space-y-6 animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <span className="text-xs text-slate-400 font-medium">Order Number:</span>
+              <span className="text-xs text-slate-500 font-medium">Order Number:</span>
               <h3 className="text-xl font-extrabold text-slate-900 font-mono text-[#0070DC]">
                 {searchedOrder.orderNumber}
               </h3>
@@ -81,7 +81,7 @@ export const TrackOrderPage: React.FC = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-slate-400 block">Sourcing Milestone</span>
+              <span className="text-xs text-slate-500 block">Sourcing Milestone</span>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-[#0070DC] inline-block mt-1">
                 {searchedOrder.status}
               </span>
@@ -97,7 +97,7 @@ export const TrackOrderPage: React.FC = () => {
               {(searchedOrder.sourcingNotes || []).map((note, i) => (
                 <div key={i} className="relative">
                   <span className="absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0070DC]" />
-                  <span className="text-[10px] text-slate-400 font-semibold">{note.date}</span>
+                  <span className="text-[10px] text-slate-500 font-semibold">{note.date}</span>
                   <p className="text-xs text-slate-800 font-medium mt-0.5">{note.message}</p>
                 </div>
               ))}

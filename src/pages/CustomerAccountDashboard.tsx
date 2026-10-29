@@ -196,7 +196,7 @@ export const CustomerAccountDashboard: React.FC = () => {
                 </div>
 
                 {activePreOrders.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-4 text-center">No active sourcing pre-orders at this moment.</p>
+                  <p className="text-xs text-slate-500 py-4 text-center">No active sourcing pre-orders at this moment.</p>
                 ) : (
                   <div className="space-y-3">
                     {activePreOrders.slice(0, 2).map((order) => (
@@ -232,7 +232,7 @@ export const CustomerAccountDashboard: React.FC = () => {
               </div>
 
               {(activeTab === 'orders' ? userOrders : activePreOrders).length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-xs space-y-2">
+                <div className="text-center py-12 text-slate-500 text-xs space-y-2">
                   <p>No orders found under this category.</p>
                   <Link to="/shop" className="inline-block text-[#0070DC] font-bold hover:underline">
                     Start a New Pre-Order →
@@ -245,7 +245,7 @@ export const CustomerAccountDashboard: React.FC = () => {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                         <div>
                           <span className="font-mono text-xs font-extrabold text-[#0070DC]">{order.orderNumber}</span>
-                          <span className="text-xs text-slate-400 ml-2">Placed on {order.date}</span>
+                          <span className="text-xs text-slate-500 ml-2">Placed on {order.date}</span>
                         </div>
                         <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-50 text-[#0070DC] border border-blue-200 self-start sm:self-auto">
                           {order.status}
@@ -259,7 +259,7 @@ export const CustomerAccountDashboard: React.FC = () => {
                               <img src={it.productImage} alt="" className="w-12 h-12 rounded-xl object-cover border border-slate-100" />
                               <div>
                                 <p className="font-bold text-slate-800">{it.productName}</p>
-                                <p className="text-slate-400">Qty: {it.quantity} × {formatPrice(it.unitPrice)}</p>
+                                <p className="text-slate-500">Qty: {it.quantity} × {formatPrice(it.unitPrice)}</p>
                               </div>
                             </div>
                             <span className="font-bold text-slate-900">{formatPrice(it.totalPrice)}</span>
@@ -273,7 +273,7 @@ export const CustomerAccountDashboard: React.FC = () => {
 
                       {order.sourcingNotes && order.sourcingNotes.length > 0 && (
                         <div className="pt-2 border-t border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
                             Latest Logistics Note:
                           </span>
                           <p className="text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
@@ -317,7 +317,7 @@ export const CustomerAccountDashboard: React.FC = () => {
                     </div>
                     <p className="text-slate-600">{addr.street}</p>
                     <p className="text-slate-600 font-semibold">{addr.city}, {addr.state}</p>
-                    <p className="text-slate-400 font-mono">{addr.phone}</p>
+                    <p className="text-slate-500 font-mono">{addr.phone}</p>
                     <button
                       onClick={() => deleteCustomerAddress(addr.id)}
                       className="text-red-500 hover:text-red-700 text-[11px] font-semibold pt-2 flex items-center gap-1"
@@ -335,7 +335,7 @@ export const CustomerAccountDashboard: React.FC = () => {
             <div className="bg-white rounded-3xl border border-blue-50 p-6 sm:p-8 shadow-sm space-y-6">
               <h2 className="text-xl font-extrabold text-slate-900">Saved Wishlist ({wishlist.length})</h2>
               {wishlistedProducts.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-xs">
+                <div className="text-center py-12 text-slate-500 text-xs">
                   Your wishlist is empty. Tap the heart icon on any product to save it here.
                 </div>
               ) : (

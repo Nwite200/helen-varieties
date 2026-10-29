@@ -165,11 +165,11 @@ export const Navbar: React.FC = () => {
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div className="hidden lg:block">
-                  <div className="text-[11px] text-slate-400 font-medium">
+                  <div className="text-[11px] text-slate-500 font-medium">
                     {user ? `Hello, ${user.name.split(' ')[0]}` : 'Sign In'}
                   </div>
                   <div className="text-xs font-bold text-slate-800 flex items-center gap-0.5">
-                    Account <ChevronDown className="w-3 h-3 text-slate-400" />
+                    Account <ChevronDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </div>
               </button>
@@ -329,7 +329,7 @@ export const Navbar: React.FC = () => {
                     className="flex items-center justify-between px-4 py-2.5 text-xs text-slate-700 hover:bg-blue-50 hover:text-[#0070DC] transition font-medium"
                   >
                     <span>{category.name}</span>
-                    <span className="text-[10px] text-slate-400">({category.itemCount || 40}+)</span>
+                    <span className="text-[10px] text-slate-500">({category.itemCount || 40}+)</span>
                   </Link>
                 ))}
               </div>
@@ -382,7 +382,7 @@ export const Navbar: React.FC = () => {
           </nav>
 
           <div className="pt-3 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Categories</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Categories</p>
             <div className="grid grid-cols-2 gap-1 max-h-48 overflow-y-auto">
               {CATEGORIES.map(cat => (
                 <Link

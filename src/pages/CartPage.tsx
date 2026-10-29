@@ -242,7 +242,7 @@ export const CartPage: React.FC = () => {
             WhatsApp enquiries are confirmed manually by our team; product prices exclude shipping unless explicitly stated.
           </p>
 
-          <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
+          <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Secure 256-bit Encrypted Pre-Order</span>
           </div>

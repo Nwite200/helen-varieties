@@ -166,6 +166,7 @@ export const AdminAppLayout: React.FC = () => {
     setPCategory('Electronics & Gadgets');
     setPImages(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
     setPImageUrlInput('');
+    setPFormError('');
   };
   const [pName, setPName] = useState('');
   const [pCategory, setPCategory] = useState('Electronics & Gadgets');
@@ -173,6 +174,7 @@ export const AdminAppLayout: React.FC = () => {
   const [pSku, setPSku] = useState('HV-SRC-' + Math.floor(100 + Math.random() * 900));
   const [pImages, setPImages] = useState<string[]>(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
   const [pImageUrlInput, setPImageUrlInput] = useState('');
+  const [pFormError, setPFormError] = useState('');
 
   const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -228,6 +230,10 @@ export const AdminAppLayout: React.FC = () => {
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
+    setPFormError('');
+    if (!pName.trim()) { setPFormError('Product name is required.'); return; }
+    if (!(Number(pPrice) > 0)) { setPFormError('Price must be greater than 0.'); return; }
+    if (pImages.length === 0) { setPFormError('At least one product image is required.'); return; }
     const primaryImage = pImages[0] || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80';
     const images = pImages.length ? pImages : [primaryImage];
     if (editingProduct) {
@@ -317,7 +323,7 @@ export const AdminAppLayout: React.FC = () => {
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition ${
                     isActive
                       ? 'bg-[#0070DC] text-white shadow-md shadow-blue-500/20'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      : 'text-slate-500 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -341,7 +347,7 @@ export const AdminAppLayout: React.FC = () => {
         <div className="pt-4 border-t border-white/10 space-y-2">
           <div className="px-2">
             <p className="text-xs font-bold text-white truncate">{adminUser.name}</p>
-            <p className="text-[10px] text-slate-400 truncate">{adminUser.email}</p>
+            <p className="text-[10px] text-slate-500 truncate">{adminUser.email}</p>
           </div>
           <button
             onClick={() => {
@@ -399,7 +405,7 @@ export const AdminAppLayout: React.FC = () => {
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
                 <span className="text-xs text-slate-500 font-semibold">Confirmed Revenue</span>
                 <div className="text-2xl font-extrabold text-emerald-600 mt-1">{formatPrice(confirmedRevenue)}</div>
-                <span className="text-[10px] text-slate-400 font-medium">Excludes unpaid</span>
+                <span className="text-[10px] text-slate-500 font-medium">Excludes unpaid</span>
               </div>
             </div>
 
@@ -415,7 +421,7 @@ export const AdminAppLayout: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="text-slate-400 border-b border-slate-100">
+                    <tr className="text-slate-500 border-b border-slate-100">
                       <th className="pb-3 font-bold">Order #</th>
                       <th className="pb-3 font-bold">Customer</th>
                       <th className="pb-3 font-bold">Channel</th>
@@ -526,7 +532,7 @@ export const AdminAppLayout: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm min-h-[500px]">
               {/* Left Conversations List */}
               <div className="lg:col-span-4 border-r border-slate-200 p-4 space-y-2">
-                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-2">
+                <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider px-2 mb-2">
                   Recent WhatsApp Inquiries
                 </h4>
                 <div className="space-y-1.5">
@@ -550,7 +556,7 @@ export const AdminAppLayout: React.FC = () => {
                         <p className="text-[11px] text-slate-500 font-mono truncate">{conv.customerPhone}</p>
                         <p className="text-xs text-slate-600 truncate">{conv.lastMessage}</p>
                       </div>
-                      <span className="text-[10px] text-slate-400 flex-shrink-0">{conv.lastTimestamp}</span>
+                      <span className="text-[10px] text-slate-500 flex-shrink-0">{conv.lastTimestamp}</span>
                     </button>
                   ))}
                 </div>
@@ -564,7 +570,7 @@ export const AdminAppLayout: React.FC = () => {
                       <div>
                         <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                           {activeConv.customerName}
-                          <span className="text-xs text-slate-400 font-mono">({activeConv.customerPhone})</span>
+                          <span className="text-xs text-slate-500 font-mono">({activeConv.customerPhone})</span>
                         </h3>
                         {activeConv.associatedOrderNumber && (
                           <span className="text-[11px] text-[#0070DC] font-bold">
@@ -611,7 +617,7 @@ export const AdminAppLayout: React.FC = () => {
                             </span>
                             {msg.text}
                           </div>
-                          <span className="text-[9px] text-slate-400 mt-1 px-1">{msg.timestamp}</span>
+                          <span className="text-[9px] text-slate-500 mt-1 px-1">{msg.timestamp}</span>
                         </div>
                       ))}
                     </div>
@@ -634,7 +640,7 @@ export const AdminAppLayout: React.FC = () => {
                     </form>
                   </>
                 ) : (
-                  <div className="text-center py-20 text-slate-400 text-xs">Select a conversation to inspect.</div>
+                  <div className="text-center py-20 text-slate-500 text-xs">Select a conversation to inspect.</div>
                 )}
               </div>
             </div>
@@ -659,13 +665,15 @@ export const AdminAppLayout: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map((p) => (
+              {products.length === 0 ? (
+                <div className="col-span-full text-center py-10 text-slate-500 text-sm">No products yet. Click "Add Item" to create one.</div>
+              ) : products.map((p) => (
                 <div key={p.id} className="p-4 border border-slate-200 rounded-2xl flex gap-3 items-center justify-between bg-white hover:border-[#0070DC] transition">
-                  <img src={p.primaryImage} alt="" className="w-16 h-16 rounded-xl object-cover border border-slate-100" />
+                  <img src={p.primaryImage} alt="" className="w-24 h-24 rounded-xl object-cover border border-slate-100" />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-bold text-slate-900 truncate">{p.name}</h4>
                     <p className="text-xs text-[#0070DC] font-extrabold">{formatPrice(p.price)}</p>
-                    <span className="text-[10px] text-slate-400 font-mono">SKU: {p.sku}</span>
+                    <span className="text-[10px] text-slate-500 font-mono">SKU: {p.sku}</span>
                   </div>
                   <button
                     onClick={() => openEditProduct(p)}
@@ -700,7 +708,9 @@ export const AdminAppLayout: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              {orders.map((o) => (
+              {orders.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-sm">No orders yet.</div>
+              ) : orders.map((o) => (
                 <div key={o.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -752,7 +762,7 @@ export const AdminAppLayout: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="text-slate-400 border-b border-slate-100">
+                  <tr className="text-slate-500 border-b border-slate-100">
                     <th className="pb-3 font-bold">Timestamp</th>
                     <th className="pb-3 font-bold">Actor</th>
                     <th className="pb-3 font-bold">Action</th>
@@ -763,7 +773,7 @@ export const AdminAppLayout: React.FC = () => {
                 <tbody className="divide-y divide-slate-100">
                   {auditLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3 font-mono text-slate-400 whitespace-nowrap">{log.timestamp}</td>
+                      <td className="py-3 font-mono text-slate-500 whitespace-nowrap">{log.timestamp}</td>
                       <td className="py-3 font-bold text-slate-800">{log.actor}</td>
                       <td className="py-3">
                         <span className="font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">
@@ -827,7 +837,7 @@ export const AdminAppLayout: React.FC = () => {
                   rows={3}
                   className="w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Shown in the welcome card after a short delay.</p>
+                <p className="text-[10px] text-slate-500 mt-1">Shown in the welcome card after a short delay.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -855,7 +865,7 @@ export const AdminAppLayout: React.FC = () => {
                     <option value="azure">Azure TTS (server-side)</option>
                     <option value="polly">Amazon Polly (server-side)</option>
                   </select>
-                  <p className="text-[10px] text-slate-400 mt-1">Remote providers need TTS_API_KEY set in Cloudflare secrets.</p>
+                  <p className="text-[10px] text-slate-500 mt-1">Remote providers need TTS_API_KEY set in Cloudflare secrets.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Voice ID / name</label>
@@ -881,7 +891,7 @@ export const AdminAppLayout: React.FC = () => {
                     onChange={(e) => setSpeakingRate(Number(e.target.value))}
                     className="w-full accent-[#0070DC]"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 text-center">{speakingRate}x</p>
+                  <p className="text-[10px] text-slate-500 mt-1 text-center">{speakingRate}x</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Default voice volume</label>
@@ -894,7 +904,7 @@ export const AdminAppLayout: React.FC = () => {
                     onChange={(e) => setDefaultVoiceVolume(Number(e.target.value))}
                     className="w-full accent-[#0070DC]"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1 text-center">{Math.round(Number(defaultVoiceVolume) * 100)}%</p>
+                  <p className="text-[10px] text-slate-500 mt-1 text-center">{Math.round(Number(defaultVoiceVolume) * 100)}%</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Avatar URL (image)</label>
@@ -927,7 +937,7 @@ export const AdminAppLayout: React.FC = () => {
                     placeholder="/audio/tech-ambience.mp3"
                     onChange={(e) => setBackgroundAsset(e.target.value)}
                     disabled={!backgroundEnabled}
-                    className={`w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none ${!backgroundEnabled ? 'bg-slate-100 text-slate-400' : ''}`}
+                    className={`w-full p-2.5 border rounded-xl text-xs focus:border-[#0070DC] focus:outline-none ${!backgroundEnabled ? 'bg-slate-100 text-slate-500' : ''}`}
                   />
                   <label className="block text-xs font-bold text-slate-700">Background volume</label>
                   <input
@@ -1029,7 +1039,7 @@ export const AdminAppLayout: React.FC = () => {
                   { label: 'Unique Customers', value: uniqueCustomers, color: 'text-purple-600' },
                 ].map((k) => (
                   <div key={k.label} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{k.label}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{k.label}</p>
                     <p className={`text-xl font-extrabold mt-1 ${k.color}`}>{k.value}</p>
                   </div>
                 ))}
@@ -1039,7 +1049,7 @@ export const AdminAppLayout: React.FC = () => {
                 <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
                   <h3 className="text-sm font-extrabold text-slate-900 mb-3">Best-Selling Products (by quantity)</h3>
                   {topProducts.length === 0 ? (
-                    <p className="text-xs text-slate-400">No order data yet.</p>
+                    <p className="text-xs text-slate-500">No order data yet.</p>
                   ) : (
                     <div className="space-y-2">
                       {topProducts.map((p) => (
@@ -1060,7 +1070,7 @@ export const AdminAppLayout: React.FC = () => {
                 <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
                   <h3 className="text-sm font-extrabold text-slate-900 mb-3">Leading Customers (by spend)</h3>
                   {topCustomers.length === 0 ? (
-                    <p className="text-xs text-slate-400">No order data yet.</p>
+                    <p className="text-xs text-slate-500">No order data yet.</p>
                   ) : (
                     <div className="space-y-2">
                       {topCustomers.map((c) => (
@@ -1087,13 +1097,13 @@ export const AdminAppLayout: React.FC = () => {
                     orders.forEach((o) => dateMap.set(o.date, (dateMap.get(o.date) || 0) + 1));
                     const dateEntries = [...dateMap.entries()].slice(-10);
                     const maxDateCount = dateEntries.reduce((m, d) => Math.max(m, d[1]), 1);
-                    if (dateEntries.length === 0) return <p className="text-xs text-slate-400">No order data yet.</p>;
+                    if (dateEntries.length === 0) return <p className="text-xs text-slate-500">No order data yet.</p>;
                     return (
                       <div className="flex items-end gap-1.5 h-40">
                         {dateEntries.map(([date, count]) => (
                           <div key={date} className="flex-1 flex flex-col items-center gap-1">
                             <div className="w-full bg-[#0070DC] rounded-t" style={{ height: `${(count / maxDateCount) * 100}%`, minHeight: '4px' }} title={`${date}: ${count}`} />
-                            <span className="text-[8px] text-slate-400 truncate w-full text-center">{date.split(' ')[0]}</span>
+                            <span className="text-[8px] text-slate-500 truncate w-full text-center">{date.split(' ')[0]}</span>
                           </div>
                         ))}
                       </div>
@@ -1107,7 +1117,7 @@ export const AdminAppLayout: React.FC = () => {
                     const statusMap = new Map<string, number>();
                     orders.forEach((o) => statusMap.set(o.status, (statusMap.get(o.status) || 0) + 1));
                     const statusEntries = [...statusMap.entries()].sort((a, b) => b[1] - a[1]);
-                    if (statusEntries.length === 0) return <p className="text-xs text-slate-400">No order data yet.</p>;
+                    if (statusEntries.length === 0) return <p className="text-xs text-slate-500">No order data yet.</p>;
                     return (
                       <div className="space-y-2">
                         {statusEntries.map(([status, count]) => (
@@ -1160,7 +1170,7 @@ export const AdminAppLayout: React.FC = () => {
               {CATEGORIES.map(c => (
                 <div key={c.id} className="p-3 bg-slate-50 border rounded-2xl flex items-center justify-between">
                   <span className="font-bold text-slate-800">{c.name}</span>
-                  <span className="text-[10px] text-slate-400">({c.itemCount || 40})</span>
+                  <span className="text-[10px] text-slate-500">({c.itemCount || 40})</span>
                 </div>
               ))}
             </div>
@@ -1320,10 +1330,15 @@ export const AdminAppLayout: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">First image is the primary thumbnail. Add more for the product gallery.</p>
+                <p className="text-[10px] text-slate-500 mt-1">First image is the primary thumbnail. Add more for the product gallery.</p>
               </div>
 
               <div className="flex gap-2 justify-end pt-3">
+                {pFormError && (
+                  <div className="col-span-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-3 py-2">
+                    {pFormError}
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => { setShowAddProductModal(false); resetProductForm(); }}
