@@ -459,7 +459,7 @@ export const AIAssistant: React.FC = () => {
             HV
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-900">{aiConfig.assistantName}</div>
+            <div className="font-heading text-sm font-bold text-slate-900">{aiConfig.assistantName}</div>
             <div className="flex items-center gap-1 text-[10px]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" /> Online
             </div>

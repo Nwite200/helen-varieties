@@ -42,7 +42,7 @@ export function buildInvoiceHtml(order: Order): string {
   <title>Invoice ${escapeHtml(order.orderNumber)} — ${BRAND_NAME}</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Plus Jakarta Sans', Arial, sans-serif; margin: 0; padding: 24px; color: #191919; background: #f7f7f8; }
+    body { font-family: 'Poppins', 'Segoe UI', Arial, sans-serif; margin: 0; padding: 24px; color: #191919; background: #f7f7f8; }
     .sheet { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0070DC; padding-bottom: 16px; margin-bottom: 20px; }
     .brand { font-size: 20px; font-weight: 800; color: #0070DC; }

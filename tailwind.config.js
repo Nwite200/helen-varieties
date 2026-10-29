@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        // Poppins for body text, Rajdhani for headings (defined in src/index.css)
+        sans: ['var(--font-body)'],
+        body: ['var(--font-body)'],
+        heading: ['var(--font-heading)'],
+      },
       colors: {
         brand: {
           blue: {
