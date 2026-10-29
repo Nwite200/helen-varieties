@@ -194,7 +194,7 @@ export const Footer: React.FC = () => {
       {/* Copyright */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16 flex flex-col md:flex-row items-center md:items-start justify-between text-xs text-slate-400 gap-4">
         <div className="space-y-1.5 text-center md:text-left">
-          <p>© 2026 · HELEN'S VARIETIES All rights reserved.</p>
+          <p>© 2026 · HELEN’S VARIETIES All rights reserved.</p>
           <p className="flex items-center justify-center md:justify-start gap-1.5 flex-wrap">
             Made with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" aria-label="love" /> for healthy Nigerian families nationwide &amp; beyond
           </p>
