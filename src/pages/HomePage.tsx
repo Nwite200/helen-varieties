@@ -29,7 +29,7 @@ export const HomePage: React.FC = () => {
   // Hero banners matching reference visual identity
   const banners = [
     {
-      badge: "Welcome To Helen Varieties",
+      badge: "Welcome To Helen’s Varieties",
       title: "Quality Products from Around the World",
       subtitle: "Discover amazing products from 1688, China and other global suppliers. Place your pre-order and get them delivered to your doorstep.",
       button1: { text: "Shop Products", link: "/shop" },
@@ -104,7 +104,7 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-white/95">
                   <CreditCard className="w-4 h-4 text-blue-200 flex-shrink-0" />
-                  <span>Secure Payments</span>
+                  <span>Pay After Confirmation</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-white/95">
                   <Headphones className="w-4 h-4 text-rose-300 flex-shrink-0" />
@@ -135,7 +135,7 @@ export const HomePage: React.FC = () => {
               <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20">
                 <img
                   src={banners[currentSlide].image}
-                  alt="Helen Varieties International Cargo"
+                  alt="Helen’s Varieties International Cargo"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent flex flex-col justify-end p-5">
@@ -333,10 +333,10 @@ export const HomePage: React.FC = () => {
               Transparency Guarantee
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
-              How International Pre-Ordering Works at Helen Varieties
+              How International Pre-Ordering Works at Helen’s Varieties
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 mt-2">
-              Unlike regular retail stores carrying dead stock, Helen Varieties leverages an agile pre-order model. 
+              Unlike regular retail stores carrying dead stock, Helen’s Varieties leverages an agile pre-order model. 
               We purchase goods directly on your behalf at manufacturing costs, eliminating inflated retail markups.
             </p>
           </div>
@@ -393,7 +393,7 @@ export const HomePage: React.FC = () => {
             <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-amber-900 leading-relaxed">
               <span className="font-bold">Shipping Transparency Policy: </span>
-              In strict accordance with Helen Varieties policy, product prices displayed online cover only the manufacturing procurement price. 
+              In strict accordance with Helen’s Varieties policy, product prices displayed online cover only the manufacturing procurement price. 
               International shipping and clearing fees vary by actual cargo weight (measured in KG) and will be billed separately when cargo lands at our Lagos warehouse.
             </div>
           </div>

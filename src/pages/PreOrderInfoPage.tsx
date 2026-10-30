@@ -21,7 +21,7 @@ export const PreOrderInfoPage: React.FC = () => {
           Wholesale Direct Sourcing Guide
         </span>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-          How Pre-Ordering Works with Helen Varieties
+          How Pre-Ordering Works with Helen’s Varieties
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
           We bring 1688 and Chinese factory wholesale pricing directly to Nigerian shoppers and retail entrepreneurs with complete transparency, quality inspection, and zero hidden markups.
@@ -101,7 +101,7 @@ export const PreOrderInfoPage: React.FC = () => {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <span className="text-[11px] text-slate-500 font-bold block">Current Benchmark Rate</span>
+            <span className="text-[11px] text-slate-500 font-bold block">Example Rate (confirmed when you order)</span>
             <span className="text-xl font-extrabold text-[#0070DC]">¥1 RMB = ₦220.00</span>
           </div>
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -116,7 +116,7 @@ export const PreOrderInfoPage: React.FC = () => {
       </section>
 
       {/* Frequently Asked Questions */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
+      <section id="returns" className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
         <h2 className="text-xl font-extrabold text-slate-900">
           Frequently Asked Questions
         </h2>
@@ -139,8 +139,7 @@ export const PreOrderInfoPage: React.FC = () => {
           <div className="pt-3 space-y-1">
             <h4 className="font-bold text-slate-900 text-sm">How do I track my parcel?</h4>
             <p className="text-slate-600 leading-relaxed">
-              Every pre-order generates a unique reference code (e.g., #HV00123). You can paste this code on our Track Order page at any time to see the live milestone log.
-            </p>
+              Every pre-order generates a unique reference code (e.g., #HV482915). You can enter it, together with the tracking secret shown at checkout, on our Track Order page at any time to see the live milestone log.</p>
           </div>
         </div>
       </section>

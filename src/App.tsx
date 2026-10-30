@@ -12,6 +12,9 @@ import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { InvoicePage } from './pages/InvoicePage';
+import { PrivacyPage, TermsPage } from './pages/LegalPages';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { RouteSeo } from './components/RouteSeo';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { TrackOrderPage } from './pages/TrackOrderPage';
@@ -19,8 +22,6 @@ import { PreOrderInfoPage } from './pages/PreOrderInfoPage';
 import { ContactPage } from './pages/ContactPage';
 
 // Customer Auth & Dashboards
-import { CustomerAuthPage } from './pages/CustomerAuthPage';
-import { CustomerAccountDashboard } from './pages/CustomerAccountDashboard';
 
 // Admin System
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -41,6 +42,7 @@ function AppInner() {
     <BrowserRouter>
       {/* Central Logo Intro Animation for initial load & client route transitions */}
       <LogoIntroAnimation />
+      <RouteSeo />
 
       <div className="min-h-screen flex flex-col bg-[#F7F7F8]">
         <Navbar />
@@ -58,24 +60,18 @@ function AppInner() {
             <Route path="/about" element={<PreOrderInfoPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/wishlist" element={<ShopPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
-            {/* Customer Authentication Routes */}
-            <Route path="/login" element={<CustomerAuthPage mode="login" />} />
-            <Route path="/register" element={<CustomerAuthPage mode="register" />} />
-            <Route path="/forgot-password" element={<CustomerAuthPage mode="forgot" />} />
-            <Route path="/reset-password" element={<CustomerAuthPage mode="reset" />} />
-
-            {/* Customer Account Routes */}
-            <Route path="/account" element={<CustomerAccountDashboard />} />
-            <Route path="/account/orders" element={<CustomerAccountDashboard />} />
-            <Route path="/account/pre-orders" element={<CustomerAccountDashboard />} />
-            <Route path="/account/addresses" element={<CustomerAccountDashboard />} />
-            <Route path="/account/profile" element={<CustomerAccountDashboard />} />
-            <Route path="/account/wishlist" element={<CustomerAccountDashboard />} />
-            {/* Backward compatibility */}
-            <Route path="/dashboard" element={<Navigate to="/account" replace />} />
-            <Route path="/auth/login" element={<Navigate to="/login" replace />} />
-            <Route path="/auth/register" element={<Navigate to="/register" replace />} />
+            {/* No customer accounts: guests check out and track orders with their order number + secret.
+                Old account/login links go to the tracking page. */}
+            <Route path="/login" element={<Navigate to="/track" replace />} />
+            <Route path="/register" element={<Navigate to="/track" replace />} />
+            <Route path="/forgot-password" element={<Navigate to="/track" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/track" replace />} />
+            <Route path="/account/*" element={<Navigate to="/track" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/track" replace />} />
+            <Route path="/auth/*" element={<Navigate to="/track" replace />} />
 
             {/* Administrator System Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -94,6 +90,9 @@ function AppInner() {
             <Route path="/admin/reports" element={<AdminAppLayout />} />
             <Route path="/admin/settings" element={<AdminAppLayout />} />
             <Route path="/admin/audit-logs" element={<AdminAppLayout />} />
+
+            {/* Anything else */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
         <Footer />
