@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /invoice/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /track
+
+Sitemap: https://helensvarieties.com.ng/sitemap.xml

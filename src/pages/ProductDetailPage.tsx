@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Star, 
@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { setPageMeta } from '../components/RouteSeo';
 import { buildProductWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages';
 
 export const ProductDetailPage: React.FC = () => {
@@ -27,6 +28,11 @@ export const ProductDetailPage: React.FC = () => {
   const { products, formatPrice, addToCart, wishlist, toggleWishlist } = useApp();
 
   const product = products.find((p) => p.id === id);
+
+  // Product title and description for the browser tab, bookmarks and search results
+  useEffect(() => {
+    if (product) setPageMeta(product.name, `${product.name}. Pre-order it from Helen’s Varieties and we source it, inspect it and deliver it to Nigeria. Price: ₦${product.price.toLocaleString()} (excludes international shipping and customs).`);
+  }, [product?.id]);
 
   // States for variants & quantity
   const [selectedImage, setSelectedImage] = useState<string>(product?.primaryImage || '');
