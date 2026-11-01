@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MapPin, Send, MessageSquare, CheckCircle, ExternalLink } from 'lucide-react';
+import { Phone, Send, MessageSquare, CheckCircle, ExternalLink } from 'lucide-react';
 import { WHATSAPP_URL, WHATSAPP_PHONE } from '../lib/whatsappMessages';
 
 export const ContactPage: React.FC = () => {
@@ -44,14 +44,6 @@ export const ContactPage: React.FC = () => {
             <h3 className="text-base font-extrabold text-slate-900">Operational Contacts</h3>
 
             <div className="space-y-4 text-xs text-slate-600">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#0070DC] flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-slate-800">Lagos Logistics Hub & Pickup Point</h4>
-                  <p className="mt-0.5">Mainland Consolidations, Victoria Island / Ikeja, Lagos State, Nigeria.</p>
-                </div>
-              </div>
-
               <div className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-[#0070DC] flex-shrink-0 mt-0.5" />
                 <div>

@@ -7,7 +7,6 @@ import {
   Headphones, 
   Mail, 
   Phone, 
-  MapPin, 
   ChevronRight,
   Globe2,
   Plane,
@@ -151,10 +150,6 @@ export const Footer: React.FC = () => {
           <div className="space-y-3">
             <h5 className="text-sm font-bold text-white uppercase tracking-wider">Contact Us</h5>
             <div className="space-y-2 text-xs text-slate-500">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                <span>Lagos Mainland Logistics Hub & Pickup Point, Nigeria</span>
-              </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400 flex-shrink-0" />
                 <a href="tel:+2347032583937" className="hover:text-white transition">07032583937</a>
