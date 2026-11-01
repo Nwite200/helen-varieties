@@ -44,7 +44,7 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/shop' },
-    { name: 'Pre-Order', path: '/pre-order' },
+    { name: 'How It Works', path: '/how-it-works' },
     { name: 'Track Order', path: '/track' },
     { name: 'About Us', path: '/about' },
     { name: 'Contact', path: '/contact' },
@@ -57,9 +57,9 @@ export const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="bg-white/20 text-white px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1">
-              <Plane className="w-3 h-3" /> 1688 Direct
+              <Plane className="w-3 h-3" /> Global Sourcing
             </span>
-            <span>Your Trusted Sourcing Partner from 1688, China & Global Markets</span>
+            <span>Your Trusted Sourcing Partner for Quality Products Worldwide</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-6 text-[12px] opacity-95">
@@ -212,7 +212,7 @@ export const Navbar: React.FC = () => {
           <div className="flex w-full items-center border border-slate-300 rounded-lg overflow-hidden bg-white">
             <input
               type="text"
-              placeholder="Search products, brands, 1688 items..."
+              placeholder="Search products, brands..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
@@ -285,7 +285,7 @@ export const Navbar: React.FC = () => {
           {/* Sourcing guarantee badge */}
           <div className="hidden lg:flex items-center gap-2 text-xs text-slate-600 font-medium bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Pre-Order Verification Protected</span>
+            <span>Secure Ordering</span>
           </div>
         </div>
       </div>

@@ -220,7 +220,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const baseNumber = whatsappConfig.internationalNumber || '2347032583937';
     const text = prefilledText 
       ? encodeURIComponent(prefilledText)
-      : encodeURIComponent("Hello Helen's Varieties Venture, I would like to inquire about sourcing and pre-orders.");
+      : encodeURIComponent("Hello Helen's Varieties Venture, I would like to inquire about sourcing and orders.");
     return `https://wa.me/${baseNumber}?text=${text}`;
   };
 
@@ -323,6 +323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Pending Payment',
       paymentStatus: 'Unpaid',
       trackingSecret: data.trackingSecret,
+      paymentInstructions: data.payment || null,
       items: Array.isArray(data.items) ? data.items : orderData.items,
       subtotal: typeof data.subtotal === 'number' ? data.subtotal : orderData.subtotal,
       totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount : orderData.totalAmount,

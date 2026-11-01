@@ -23,7 +23,7 @@ import { buildInvoiceHtml, openInvoice, WHATSAPP_PHONE } from '../lib/invoice';
 import { Order } from '../types';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, formatPrice, createOrder } = useApp();
+  const { cart, formatPrice, createOrder, getWhatsAppLink } = useApp();
   const navigate = useNavigate();
 
   // Mode: Guest Checkout vs Login / Register Account
@@ -61,8 +61,8 @@ export const CheckoutPage: React.FC = () => {
   if (cart.length === 0 && currentStep !== 4) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4 px-4">
-        <h2 className="text-xl font-bold text-slate-900">No items in your Pre-Order Cart</h2>
-        <p className="text-xs text-slate-500">Your cart is currently empty. Explore our 1688 catalogue to add items.</p>
+        <h2 className="text-xl font-bold text-slate-900">No items in your Cart</h2>
+        <p className="text-xs text-slate-500">Your cart is currently empty. Explore our catalogue to add items.</p>
         <Link to="/shop" className="inline-block px-6 py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-xl shadow-md transition">
           Browse Products
         </Link>
@@ -110,7 +110,7 @@ export const CheckoutPage: React.FC = () => {
 
   const handleCompleteOrder = () => {
     if (!agreeDisclaimer) {
-      setErrorMessage('You must acknowledge that international shipping is excluded from this initial pre-order manufacturing payment.');
+      setErrorMessage('You must acknowledge that international shipping is excluded from this product payment.');
       return;
     }
 
@@ -148,7 +148,7 @@ export const CheckoutPage: React.FC = () => {
         },
         items: orderItems,
         subtotal,
-        shippingNote: 'Not included. Calculated based on actual measured weight upon landing at Lagos consolidation.',
+        shippingNote: 'Not included. Calculated based on actual measured weight upon arrival in Lagos.',
         totalAmount: subtotal,
         paymentMethod: 'Bank transfer (details sent on WhatsApp)',
         paymentReference: '',
@@ -177,7 +177,7 @@ export const CheckoutPage: React.FC = () => {
       {/* Step Indicator Header */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
         <h1 className="text-2xl font-extrabold text-slate-900 mb-6 text-center sm:text-left">
-          Helen's Varieties Venture — Pre-Order Checkout
+          Helen's Varieties Venture — Checkout
         </h1>
 
         <div className="grid grid-cols-4 gap-2 text-center text-xs font-bold">
@@ -318,7 +318,7 @@ export const CheckoutPage: React.FC = () => {
               type="submit"
               className="w-full py-3.5 bg-[#0070DC] hover:bg-[#005BB5] text-white font-extrabold text-xs rounded-xl shadow-md transition-all mt-4"
             >
-              Continue to Review Pre-Order
+              Continue to Review Order
             </button>
           </form>
         </div>
@@ -410,7 +410,7 @@ export const CheckoutPage: React.FC = () => {
           <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-2">
             <h4 className="text-xs font-extrabold text-[#0070DC] uppercase tracking-wider">How payment works</h4>
             <ol className="text-xs text-slate-700 leading-relaxed list-decimal pl-4 space-y-1">
-              <li>Submit your pre-order. Nothing is charged online.</li>
+              <li>Place your order, then pay by bank transfer using the details shown.</li>
               <li>Our team confirms availability and the exact amount with you on WhatsApp ({WHATSAPP_PHONE}).</li>
               <li>We send the account details for a bank transfer. Your order starts once payment is confirmed.</li>
             </ol>
@@ -421,7 +421,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="flex items-start gap-2.5">
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-red-900 leading-relaxed">
-                <strong className="block text-red-800 mb-1">MANDATORY PRE-ORDER SOURCING AGREEMENT:</strong>
+                <strong className="block text-red-800 mb-1">PLEASE CONFIRM:</strong>
                 “Product prices exclude international shipping, customs charges, and other applicable delivery fees unless explicitly stated. Additional charges will be communicated according to the order's sourcing and delivery arrangements.”
               </div>
             </div>
@@ -458,10 +458,10 @@ export const CheckoutPage: React.FC = () => {
               className="w-2/3 py-3 bg-[#0070DC] hover:bg-[#005BB5] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating Pre-Order...</>
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Placing order...</>
               ) : (
                 <>
-                  <Lock className="w-3.5 h-3.5" /> Submit Pre-Order ({formatPrice(subtotal)})
+                  <Lock className="w-3.5 h-3.5" /> Place Order ({formatPrice(subtotal)})
                 </>
               )}
             </button>
@@ -478,11 +478,11 @@ export const CheckoutPage: React.FC = () => {
 
           <div>
             <span className="text-[10px] font-extrabold px-3 py-1 bg-blue-100 text-[#0070DC] rounded-full uppercase tracking-wider inline-block mb-2">
-              {checkoutMode === 'guest' ? 'Guest Pre-Order Submitted' : 'Pre-Order Confirmed'}
+              {checkoutMode === 'guest' ? 'Order Placed' : 'Order Placed'}
             </span>
             <h2 className="text-2xl font-extrabold text-slate-900">Thank You, {fullName}!</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Your sourcing ticket is registered with our Guangzhou factory procurement office.
+              Your order has been registered with our sourcing team.
             </p>
           </div>
 
@@ -507,6 +507,32 @@ export const CheckoutPage: React.FC = () => {
               <span>Waybill Notice:</span>
               <span className="font-semibold text-amber-700">Excluded now; calculated upon landing</span>
             </div>
+          </div>
+
+          {/* Pay now */}
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left text-xs space-y-2">
+            <h3 className="font-extrabold text-[#0070DC] text-sm">Pay now to confirm your order</h3>
+            {createdOrder?.paymentInstructions ? (
+              <>
+                <p className="text-slate-600">Transfer <strong>{formatPrice(subtotal)}</strong> to the account below and use <strong>{createdOrderNumber}</strong> as the reference.</p>
+                <div className="bg-white rounded-xl border border-blue-100 p-3 space-y-1">
+                  <div className="flex justify-between"><span className="text-slate-500">Bank</span><span className="font-bold text-slate-900">{createdOrder.paymentInstructions.bankName}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Account number</span><span className="font-mono font-bold text-slate-900">{createdOrder.paymentInstructions.accountNumber}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Account name</span><span className="font-bold text-slate-900">{createdOrder.paymentInstructions.accountName}</span></div>
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-600">Send us your order reference <strong>{createdOrderNumber}</strong> on WhatsApp and we will reply with our payment details right away.</p>
+            )}
+            <a
+              href={getWhatsAppLink(`Hello, I have placed order ${createdOrderNumber} for ${formatPrice(subtotal)}. ${createdOrder?.paymentInstructions ? 'I have made payment; here is my proof of payment.' : 'Please send me the payment details.'}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-3 bg-[#25D366] hover:bg-[#1ebe5b] text-white font-bold rounded-xl text-center transition"
+            >
+              {createdOrder?.paymentInstructions ? 'I have paid — send proof on WhatsApp' : 'Get payment details on WhatsApp'}
+            </a>
+            <p className="text-[11px] text-slate-500">Only pay into account details shown here or sent by us from {WHATSAPP_PHONE}. Your order starts once we confirm your payment.</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">

@@ -1,7 +1,7 @@
 import { Order } from '../types';
 
 export const BRAND_NAME = "Helen's Varieties Venture";
-export const BRAND_TAGLINE = 'Discover More. Pre-Order with Confidence.';
+export const BRAND_TAGLINE = 'Discover More. Order with Confidence.';
 export const WHATSAPP_PHONE = '07032583937';
 export const WHATSAPP_LINK = 'https://wa.me/2347032583937';
 
@@ -135,8 +135,12 @@ export function buildInvoiceHtml(order: Order): string {
       <strong>Shipping disclaimer:</strong> ${escapeHtml(order.shippingNote || 'Product prices exclude international shipping, customs charges, and other applicable delivery fees unless explicitly stated. Additional charges will be communicated according to the order’s sourcing and delivery arrangements.')}
     </div>
 
+    ${order.paymentInstructions ? `<div class="disclaimer" style="background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
+      <strong>How to pay:</strong> bank transfer to ${escapeHtml(order.paymentInstructions.bankName)}, account ${escapeHtml(order.paymentInstructions.accountNumber)} (${escapeHtml(order.paymentInstructions.accountName)}). Use ${escapeHtml(order.orderNumber)} as the reference.
+    </div>` : ''}
+
     <div class="footer">
-      Thank you for pre-ordering with ${BRAND_NAME}. This receipt is generated automatically. Payments are subject to verification. For support, contact us on WhatsApp ${WHATSAPP_PHONE}.
+      Thank you for ordering with ${BRAND_NAME}. This receipt is generated automatically. Payments are subject to verification. For support, contact us on WhatsApp ${WHATSAPP_PHONE}.
     </div>
 
     <div class="actions">

@@ -33,7 +33,7 @@ export const ContactPage: React.FC = () => {
           Get in Touch with Helen’s Varieties
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Have an inquiry, bulk order request, or want our team to source a specific 1688 product link? Reach out below.
+          Have an inquiry, bulk order request, or want our team to source a specific product link? Reach out below.
         </p>
       </div>
 
@@ -62,17 +62,9 @@ export const ContactPage: React.FC = () => {
 
             </div>
           </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-xs text-slate-700 space-y-2">
-            <h4 className="font-bold text-[#0070DC]">China Office & Consolidation</h4>
-            <p>
-              Guangzhou Baiyun Logistics District, Guangdong Province, China.
-              Quality inspections and container consolidation happen daily before cargo boarding.
-            </p>
-          </div>
         </div>
 
-        {/* 1688 Custom Sourcing Form */}
+        {/* Custom Sourcing Form */}
         <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs">
           {submitted ? (
             <div className="text-center py-12 space-y-4">
@@ -93,7 +85,7 @@ export const ContactPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <h3 className="text-base font-extrabold text-slate-900 mb-2">
-                Custom 1688 Link Sourcing Ticket
+                Custom Sourcing Request
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -122,10 +114,10 @@ export const ContactPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Paste 1688 or Product URL</label>
+                <label className="block font-bold text-slate-700 mb-1">Paste a Product Link</label>
                 <input
                   type="url"
-                  placeholder="https://detail.1688.com/offer/..."
+                  placeholder="https://example.com/product/..."
                   value={linkInput}
                   onChange={(e) => setLinkInput(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0070DC]"

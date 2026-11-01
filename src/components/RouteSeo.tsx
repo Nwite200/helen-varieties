@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SITE = 'Helen’s Varieties';
-const DEFAULT_TITLE = `${SITE} — Pre-Order Quality Products from 1688 & Global Suppliers, Delivered in Nigeria`;
+const DEFAULT_TITLE = `${SITE} — Quality Products from Global Suppliers, Delivered in Nigeria`;
 const DEFAULT_DESCRIPTION =
-  'Discover More. Pre-Order with Confidence. Source products directly from 1688, China and worldwide manufacturers, delivered to Nigeria. Order and get updates on WhatsApp.';
+  'Discover More. Order with Confidence. Quality products from trusted suppliers worldwide, delivered to Nigeria. Order and get updates on WhatsApp.';
 
 interface PageMeta {
   title: string;
@@ -15,11 +15,11 @@ interface PageMeta {
 // Titles for each route. Pages that must not appear in search results are marked noindex.
 const META: Array<[RegExp, PageMeta]> = [
   [/^\/$/, { title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION }],
-  [/^\/shop$/, { title: `Shop Products | ${SITE}`, description: 'Browse products you can pre-order from 1688 and global suppliers, with prices in Naira.' }],
-  [/^\/(pre-order|about)$/, { title: `How Pre-Ordering Works | ${SITE}`, description: 'See how we source, inspect, ship and deliver your pre-order from China to Nigeria, and how shipping and customs are billed.' }],
-  [/^\/contact$/, { title: `Contact & Sourcing Requests | ${SITE}`, description: 'Ask a question or send us a 1688 product link to source. We reply on WhatsApp.' }],
+  [/^\/shop$/, { title: `Shop Products | ${SITE}`, description: 'Browse products you can order and pay for online, with prices in Naira.' }],
+  [/^\/(how-it-works|pre-order|about)$/, { title: `How Ordering Works | ${SITE}`, description: 'See how we source, inspect, ship and deliver your order to Nigeria, and how shipping and customs are billed.' }],
+  [/^\/contact$/, { title: `Contact & Sourcing Requests | ${SITE}`, description: 'Ask a question or send us a product link to source. We reply on WhatsApp.' }],
   [/^\/privacy$/, { title: `Privacy Policy | ${SITE}`, description: 'What personal information we collect when you order, how we use it, and your rights.' }],
-  [/^\/terms$/, { title: `Terms of Service | ${SITE}`, description: 'How pre-ordering, payment, delivery and returns work with Helen’s Varieties Venture.' }],
+  [/^\/terms$/, { title: `Terms of Service | ${SITE}`, description: 'How ordering, payment, delivery and returns work with Helen’s Varieties Venture.' }],
   [/^\/track$/, { title: `Track Your Order | ${SITE}`, noindex: true }],
   [/^\/cart$/, { title: `Your Cart | ${SITE}`, noindex: true }],
   [/^\/checkout$/, { title: `Checkout | ${SITE}`, noindex: true }],

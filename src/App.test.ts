@@ -126,7 +126,7 @@ describe('Helen’s Varieties Core Business Workflows', () => {
         user: null,
         orderByNumber,
       });
-      expect(reply.text).toContain('1688');
+      expect(reply.text).toContain('verified manufacturers');
       expect(reply.text).toContain('exclude');
       expect(reply.links.some((l) => l.url === '/track' || l.url === '/shop')).toBe(true);
     });

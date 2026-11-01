@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-white">Pre-Order Products</h4>
+              <h4 className="text-sm font-bold text-white">Shop Products</h4>
               <p className="text-xs text-slate-500">From Trusted Suppliers</p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export const Footer: React.FC = () => {
             <Logo size="lg" theme="light" />
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
               Helen’s Varieties Venture is your premier international sourcing partner. 
-              We connect Nigerian consumers and businesses directly with verified factories on 1688 and global manufacturers with transparent pre-order tracking.
+              We connect Nigerian consumers and businesses directly with verified factories and global manufacturers with transparent order tracking.
             </p>
             <div className="flex items-center gap-3 text-xs text-slate-500 pt-2">
               <span className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
@@ -93,8 +93,8 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/pre-order" className="hover:text-white transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-blue-500" /> How Pre-Order Works
+                <Link to="/how-it-works" className="hover:text-white transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-blue-500" /> How Ordering Works
                 </Link>
               </li>
               <li>
@@ -120,17 +120,17 @@ export const Footer: React.FC = () => {
             <h5 className="text-sm font-bold text-white uppercase tracking-wider">Sourcing & Policies</h5>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link to="/pre-order#shipping-policy" className="hover:text-white transition flex items-center gap-1">
+                <Link to="/how-it-works#shipping-policy" className="hover:text-white transition flex items-center gap-1">
                   <ChevronRight className="w-3 h-3 text-blue-500" /> Shipping & Waybill Notice
                 </Link>
               </li>
               <li>
-                <Link to="/pre-order#exchange-rates" className="hover:text-white transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-blue-500" /> 1688 Exchange Rates
+                <Link to="/how-it-works#exchange-rates" className="hover:text-white transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-blue-500" /> How Our Prices Work
                 </Link>
               </li>
               <li>
-                <Link to="/pre-order#returns" className="hover:text-white transition flex items-center gap-1">
+                <Link to="/how-it-works#returns" className="hover:text-white transition flex items-center gap-1">
                   <ChevronRight className="w-3 h-3 text-blue-500" /> Inspection & Return Policy
                 </Link>
               </li>

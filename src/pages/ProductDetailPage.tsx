@@ -31,7 +31,7 @@ export const ProductDetailPage: React.FC = () => {
 
   // Product title and description for the browser tab, bookmarks and search results
   useEffect(() => {
-    if (product) setPageMeta(product.name, `${product.name}. Pre-order it from Helen’s Varieties and we source it, inspect it and deliver it to Nigeria. Price: ₦${product.price.toLocaleString()} (excludes international shipping and customs).`);
+    if (product) setPageMeta(product.name, `${product.name}. Order it from Helen’s Varieties and we source it, inspect it and deliver it to Nigeria. Price: ₦${product.price.toLocaleString()} (excludes international shipping and customs).`);
   }, [product?.id]);
 
   // States for variants & quantity
@@ -138,7 +138,7 @@ export const ProductDetailPage: React.FC = () => {
             />
             <span className="absolute bottom-3 right-3 bg-black/50 text-white text-[9px] font-bold px-2 py-1 rounded">Click to zoom</span>
             <span className="absolute top-4 left-4 bg-[#0070DC] text-white text-[10px] font-extrabold px-2.5 py-1 rounded shadow uppercase tracking-wide">
-              Verified 1688 Sourcing
+              Verified Sourcing
             </span>
           </div>
         </div>
@@ -174,7 +174,7 @@ export const ProductDetailPage: React.FC = () => {
                 {formatPrice(product.price)}
               </span>
               <p className="text-xs text-slate-500 mt-0.5">
-                Pre-order procurement unit price (excl. intl shipping & customs)
+                Unit price (excl. intl shipping & customs)
               </p>
             </div>
             {product.supplierPriceRMB && (
@@ -256,7 +256,7 @@ export const ProductDetailPage: React.FC = () => {
               onClick={handlePreOrder}
               className="w-full py-3.5 bg-[#0070DC] hover:bg-[#005BB5] text-white font-extrabold text-sm rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
-              <Package className="w-4 h-4" /> Pre-Order Now ({formatPrice(product.price * quantity)})
+              <Package className="w-4 h-4" /> Order Now ({formatPrice(product.price * quantity)})
             </button>
 
             <a
@@ -282,7 +282,7 @@ export const ProductDetailPage: React.FC = () => {
 
             {addedToast && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center justify-between">
-                <span>Item successfully added to your Pre-Order Cart!</span>
+                <span>Item added to your cart!</span>
                 <Link to="/cart" className="font-bold underline text-emerald-900">
                   View Cart
                 </Link>
@@ -373,10 +373,10 @@ export const ProductDetailPage: React.FC = () => {
           {activeTab === 'description' && (
             <div className="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed max-w-3xl">
               <p>{product.description}</p>
-              <h4 className="font-bold text-slate-900 mt-4">Why Pre-Order this Item with Helen’s Varieties?</h4>
+              <h4 className="font-bold text-slate-900 mt-4">Why order this item from Helen’s Varieties?</h4>
               <ul className="list-disc pl-5 space-y-1.5 text-slate-600">
                 <li>Factory-direct procurement bypasses standard retail reseller markups.</li>
-                <li>Physical quality inspection conducted in Guangzhou prior to packing.</li>
+                <li>Physical quality inspection conducted before packing.</li>
                 <li>Comprehensive tracking number provided for cargo freight progress.</li>
               </ul>
             </div>
@@ -394,7 +394,7 @@ export const ProductDetailPage: React.FC = () => {
                   ))}
                   <tr className="bg-slate-50">
                     <td className="py-2.5 px-4 font-bold text-slate-700 border-b border-slate-100">Estimated Sourcing Time</td>
-                    <td className="py-2.5 px-4 text-slate-600 border-b border-slate-100">{product.sourcingTimeframe}</td>
+                    <td className="py-2.5 px-4 text-slate-600 border-b border-slate-100">{product.sourcingTimeframe || "Confirmed on WhatsApp"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -405,7 +405,7 @@ export const ProductDetailPage: React.FC = () => {
             <div className="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed max-w-3xl">
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                 <h4 className="font-bold text-slate-900">Cargo & Freight Timelines:</h4>
-                <p>• <strong>Air Cargo Freight:</strong> 10 - 15 working days following factory dispatch.</p>
+                <p>• <strong>Air Cargo Freight:</strong> Delivery time is confirmed on WhatsApp once your order is placed.</p>
                 <p>• <strong>Sea Cargo Freight:</strong> 35 - 45 days (recommended for bulky machinery and large furniture).</p>
                 <p>• <strong>Local Nigeria Delivery:</strong> Doorstep dispatch via GIG Logistics or pickup at our Lagos warehouse.</p>
               </div>
@@ -417,7 +417,7 @@ export const ProductDetailPage: React.FC = () => {
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="font-bold text-xs text-slate-800">Chinedu O.</span>
-                  <span className="text-[11px] text-slate-500">Verified Pre-Order</span>
+                  <span className="text-[11px] text-slate-500">Verified Order</span>
                 </div>
                 <div className="flex items-center text-amber-400 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -425,7 +425,7 @@ export const ProductDetailPage: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-xs text-slate-600">
-                  Item came exactly as pictured on 1688. The sourcing team checked it before flying it down. Very transparent process.
+                  Item came exactly as pictured. The sourcing team checked it before flying it down. Very transparent process.
                 </p>
               </div>
             </div>

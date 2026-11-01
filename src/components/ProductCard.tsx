@@ -129,7 +129,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }
             className="w-full py-2 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            Pre-Order
+            Order
           </button>
         </div>
       </div>

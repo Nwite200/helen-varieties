@@ -119,6 +119,7 @@ export interface Order {
   source?: 'website' | 'whatsapp';
   isGuest?: boolean;
   trackingSecret?: string;
+  paymentInstructions?: { bankName: string; accountNumber: string; accountName: string } | null;
   sourcingNotes?: {
     date: string;
     message: string;

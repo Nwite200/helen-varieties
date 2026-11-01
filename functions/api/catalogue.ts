@@ -262,7 +262,7 @@ export async function listAudit(env: any): Promise<any[]> {
 }
 
 export async function sitemapXml(env: any, origin: string): Promise<string> {
-  const base = ['/', '/shop', '/pre-order', '/contact', '/privacy', '/terms'];
+  const base = ['/', '/shop', '/how-it-works', '/contact', '/privacy', '/terms'];
   let products: any[] = [];
   if (env.DB) {
     try { products = (await env.DB.prepare('SELECT id, updated_at, created_at FROM products').all()).results || []; } catch { /* empty */ }

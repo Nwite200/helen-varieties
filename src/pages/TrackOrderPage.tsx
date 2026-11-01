@@ -69,10 +69,10 @@ export const TrackOrderPage: React.FC = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
       <div className="text-center max-w-xl mx-auto space-y-3">
         <span className="text-xs font-bold uppercase tracking-wider text-[#0070DC] bg-blue-50 px-3 py-1 rounded-full">
-          Live 1688 Sourcing Tracker
+          Live Order Tracker
         </span>
         <h1 className="text-3xl font-extrabold text-slate-900">
-          Track Your Pre-Order Status
+          Track Your Order Status
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
           Enter your order number and the tracking secret you received at checkout to view sourcing, warehouse inspection, and cargo milestones.

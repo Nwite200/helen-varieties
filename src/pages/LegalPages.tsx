@@ -64,7 +64,7 @@ const privacySections: Section[] = [
       <>
         <p>
           Helen’s Varieties Venture (“we”, “us”) runs the website helensvarieties.com.ng. We help customers in Nigeria
-          pre-order products from 1688, China and other international suppliers. We decide how and why your personal data
+          order products from international suppliers. We decide how and why your personal data
           is used when you shop with us, so we are the “data controller” under the Nigeria Data Protection Act 2023
           (NDPA).
         </p>
@@ -210,26 +210,26 @@ const termsSections: Section[] = [
     heading: 'About these terms',
     body: (
       <p>
-        These terms apply when you use helensvarieties.com.ng or place a pre-order with Helen’s Varieties Venture. By
+        These terms apply when you use helensvarieties.com.ng or place an order with Helen’s Varieties Venture. By
         placing an order you agree to them. Please read them together with our{' '}
         <Link to="/privacy" className="font-semibold text-[#0070DC] hover:underline">
           Privacy Policy
         </Link>{' '}
         and the{' '}
-        <Link to="/pre-order" className="font-semibold text-[#0070DC] hover:underline">
-          How Pre-Order Works
+        <Link to="/how-it-works" className="font-semibold text-[#0070DC] hover:underline">
+          How Ordering Works
         </Link>{' '}
         page.
       </p>
     ),
   },
   {
-    heading: 'How pre-ordering works',
+    heading: 'How ordering works',
     body: (
       <>
         <p>
-          We source products for you from 1688, China and other international suppliers. Items shown on the site are not held
-          in stock in Nigeria. When you submit a pre-order you are asking us to source the item for you.
+          We source products for you from international suppliers. Items shown on the site are not held
+          in stock in Nigeria. When you place an order you are asking us to source the item for you.
         </p>
         <p>
           Your order is only accepted once we have confirmed availability and the amount with you on WhatsApp and your payment
@@ -261,7 +261,7 @@ const termsSections: Section[] = [
     body: (
       <>
         <p>
-          Nothing is charged on the website. After you submit a pre-order we send you our payment details on WhatsApp and you
+          Nothing is charged on the website. After you place an order we send you our payment details on WhatsApp and you
           pay by bank transfer. Your order starts once we confirm your payment.
         </p>
         <p>
@@ -293,7 +293,7 @@ const termsSections: Section[] = [
     body: (
       <>
         <p>
-          Goods are inspected at our China warehouse before shipping. If a defective item or a wrong specification is found at
+          Goods are inspected before shipping. If a defective item or a wrong specification is found at
           that stage, it is returned to the supplier before it ships to Nigeria.
         </p>
         <p>
@@ -373,7 +373,7 @@ const termsSections: Section[] = [
 export const PrivacyPage: React.FC = () => (
   <LegalLayout
     title="Privacy Policy"
-    intro="This policy explains what personal information Helen’s Varieties Venture collects when you use our website and place a pre-order, why we use it, and the choices you have."
+    intro="This policy explains what personal information Helen’s Varieties Venture collects when you use our website and place an order, why we use it, and the choices you have."
     sections={privacySections}
     other={{ to: '/terms', label: 'Read the Terms of Service →' }}
   />
@@ -382,7 +382,7 @@ export const PrivacyPage: React.FC = () => (
 export const TermsPage: React.FC = () => (
   <LegalLayout
     title="Terms of Service"
-    intro="These terms explain how pre-ordering works with Helen’s Varieties Venture: what you can expect from us and what we ask of you."
+    intro="These terms explain how ordering works with Helen’s Varieties Venture: what you can expect from us and what we ask of you."
     sections={termsSections}
     other={{ to: '/privacy', label: 'Read the Privacy Policy →' }}
   />

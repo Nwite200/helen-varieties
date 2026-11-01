@@ -1,6 +1,6 @@
 /**
  * Cloudflare Worker Backend Router for Helen's Varieties Venture
- * Secure authentication, guest pre-order checkout validation, and D1 persistence
+ * Secure authentication, guest checkout validation, and D1 persistence
  */
 
 import {
@@ -15,6 +15,10 @@ export interface Env {
   BRAND_NAME?: string;
   WHATSAPP_PHONE?: string;
   WHATSAPP_INTERNATIONAL?: string;
+  // Where customers pay (set in wrangler.toml [vars] or the dashboard)
+  BANK_NAME?: string;
+  BANK_ACCOUNT_NUMBER?: string;
+  BANK_ACCOUNT_NAME?: string;
   // Optional comma-separated list of extra origins allowed to call the API
   ALLOWED_ORIGINS?: string;
   // Admin credentials (Cloudflare secrets — never exposed to the browser)
@@ -170,7 +174,7 @@ export default {
         }, { headers: corsHeaders });
       }
 
-      // 2. Guest & Authenticated Pre-Order Checkout Endpoint
+      // 2. Guest & Authenticated Checkout Endpoint
       if (path === '/api/orders' && method === 'POST') {
         let body: any;
         try {
@@ -265,6 +269,9 @@ export default {
           trackingSecret,
           subtotal,
           totalAmount: subtotal,
+          payment: env.BANK_NAME && env.BANK_ACCOUNT_NUMBER && env.BANK_ACCOUNT_NAME
+            ? { bankName: env.BANK_NAME, accountNumber: env.BANK_ACCOUNT_NUMBER, accountName: env.BANK_ACCOUNT_NAME }
+            : null,
           items: priced.lines.map((l: any) => ({ productId: l.productId, productName: l.name, productImage: l.image, sku: l.sku, selectedVariants: JSON.parse(l.variants), quantity: l.quantity, unitPrice: l.unitPrice, totalPrice: l.total })),
           isGuest: Boolean(isGuest),
           customerName,

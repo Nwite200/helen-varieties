@@ -94,7 +94,7 @@ export const LogoIntroAnimation: React.FC = () => {
             Helen’s<span className="text-[#0070DC]"> Varieties</span>
           </h2>
           <p className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-            Discover More • Pre-Order with Confidence
+            Discover More • Order with Confidence
           </p>
         </div>
       </div>

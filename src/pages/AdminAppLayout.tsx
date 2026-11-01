@@ -292,7 +292,7 @@ export const AdminAppLayout: React.FC = () => {
           specifications: {},
           isFeatured: true,
           isPreOrder: true,
-          sourcingTimeframe: '10 - 15 working days',
+          sourcingTimeframe: '',
         } as any);
       }
       setShowAddProductModal(false);
@@ -316,7 +316,7 @@ export const AdminAppLayout: React.FC = () => {
     { label: 'Products', path: '/admin/products', icon: Package, id: 'products', count: products.length },
     { label: 'Categories', path: '/admin/categories', icon: Layers, id: 'categories', count: CATEGORIES.length },
     { label: 'All Orders', path: '/admin/orders', icon: ShoppingCart, id: 'orders', count: totalOrders },
-    { label: 'Pre-Orders Queue', path: '/admin/pre-orders', icon: Truck, id: 'pre-orders', count: ordersAwaitingSourcing },
+    { label: 'Sourcing Queue', path: '/admin/pre-orders', icon: Truck, id: 'pre-orders', count: ordersAwaitingSourcing },
     { label: 'Customers', path: '/admin/customers', icon: Users, id: 'customers' },
     { label: 'Payments', path: '/admin/payments', icon: CreditCard, id: 'payments' },
     { label: 'Shipping Rules', path: '/admin/shipping', icon: Truck, id: 'shipping' },
@@ -405,7 +405,7 @@ export const AdminAppLayout: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Operations Command Center</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Live monitoring of 1688 supplier orders, payments, and WhatsApp inquiries.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Live monitoring of orders, payments, and WhatsApp inquiries.</p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -427,7 +427,7 @@ export const AdminAppLayout: React.FC = () => {
               </div>
 
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-                <span className="text-xs text-slate-500 font-semibold">New Pre-Orders</span>
+                <span className="text-xs text-slate-500 font-semibold">New Orders</span>
                 <div className="text-2xl font-extrabold text-amber-600 mt-1">{newPreOrders}</div>
                 <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded">Pending Auth</span>
               </div>
@@ -610,7 +610,7 @@ export const AdminAppLayout: React.FC = () => {
                         </h3>
                         {activeConv.associatedOrderNumber && (
                           <span className="text-[11px] text-[#0070DC] font-bold">
-                            Associated Pre-Order: {activeConv.associatedOrderNumber}
+                            Associated Order: {activeConv.associatedOrderNumber}
                           </span>
                         )}
                       </div>
@@ -690,7 +690,7 @@ export const AdminAppLayout: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900">Sourcing Catalogue ({products.length})</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Manage 1688 wholesale items, variants, and Nigerian customer pricing.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Manage products, photos, and Nigerian customer pricing.</p>
               </div>
 
               <button
@@ -732,15 +732,15 @@ export const AdminAppLayout: React.FC = () => {
           </div>
         )}
 
-        {/* 4. ORDERS & PRE-ORDERS */}
+        {/* 4. ORDERS */}
         {(activeSection === 'orders' || activeSection === 'pre-orders') && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900">
-                  {activeSection === 'orders' ? 'All Orders & Transactions' : 'Pre-Order Procurement Queue'}
+                  {activeSection === 'orders' ? 'All Orders & Transactions' : 'Orders Awaiting Sourcing'}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">Full customer pre-order lifecycle management.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Full customer order lifecycle management.</p>
               </div>
             </div>
 
@@ -1193,7 +1193,7 @@ export const AdminAppLayout: React.FC = () => {
                 <input type="text" readOnly value="07032583937 (+234 703 258 3937)" className="w-full p-2.5 bg-slate-50 border rounded-xl" />
               </div>
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Guangzhou Benchmark Exchange Rate</label>
+                <label className="block font-bold text-slate-700 mb-1">Benchmark Exchange Rate</label>
                 <input type="text" readOnly value="¥1 RMB = ₦220.00" className="w-full p-2.5 bg-slate-50 border rounded-xl" />
               </div>
             </div>
@@ -1219,7 +1219,7 @@ export const AdminAppLayout: React.FC = () => {
       {editingOrderId && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">Update Pre-Order Sourcing Status</h3>
+            <h3 className="text-base font-extrabold text-slate-900">Update Sourced for you Status</h3>
             {opError && <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-3 py-2">{opError}</div>}
             <form onSubmit={handleUpdateStatus} className="space-y-4 text-xs">
               <div>
@@ -1247,7 +1247,7 @@ export const AdminAppLayout: React.FC = () => {
                 <label className="block font-bold text-slate-700 mb-1">Customer Milestone Log Message</label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Cleared Guangzhou customs. Air freight cargo departed for Lagos MMA airport."
+                  placeholder="e.g. Cleared customs. Air freight cargo departed for Lagos MMA airport."
                   value={statusNote}
                   onChange={(e) => setStatusNote(e.target.value)}
                   className="w-full p-2.5 border rounded-xl"
@@ -1278,7 +1278,7 @@ export const AdminAppLayout: React.FC = () => {
       {showAddProductModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">{editingProduct ? 'Edit Product' : 'Add 1688 Sourced Product'}</h3>
+            <h3 className="text-base font-extrabold text-slate-900">{editingProduct ? 'Edit Product' : 'Add Product'}</h3>
             <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Product Title</label>
@@ -1294,7 +1294,7 @@ export const AdminAppLayout: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Pre-Order Price (NGN)</label>
+                  <label className="block font-bold text-slate-700 mb-1">Price (NGN)</label>
                   <input
                     type="number"
                     required

@@ -226,7 +226,7 @@ export const ShopPage: React.FC = () => {
 
           {/* Sourcing Model Notice */}
           <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-xs text-slate-700 leading-relaxed">
-            <p className="font-bold text-[#0070DC] mb-1">1688 Verified Sourcing</p>
+            <p className="font-bold text-[#0070DC] mb-1">Verified Sourcing</p>
             All listed products are procured directly from certified factories. Delivery timeline typically ranges from 10 to 18 working days.
           </div>
         </aside>

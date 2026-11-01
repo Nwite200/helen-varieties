@@ -28,5 +28,8 @@ Cloudflare dashboard → your domain → Security → WAF → Rate limiting rule
 ## Know when the site is down
 Create a free monitor (UptimeRobot or Cloudflare Health Checks) for `https://helensvarieties.com.ng/api/health`. Turn on Cloudflare Web Analytics for visitor numbers.
 
+## Take payments (bank transfer)
+In `wrangler.toml` fill `BANK_NAME`, `BANK_ACCOUNT_NUMBER` and `BANK_ACCOUNT_NAME`, then push. After checkout customers see a "Pay now" box with these details and a button to send proof of payment on WhatsApp. Until they are filled, customers are told to message you on WhatsApp for payment details. When a payment arrives, open **All Orders** and set the order to "Payment Confirmed".
+
 ## Not live yet
-Online card/bank payment is not built in: customers are told payment details are sent on WhatsApp. The WhatsApp Live Hub and AI Assistant config screens in admin are demonstrations, not connected to WhatsApp.
+Automatic card payment (Paystack/Flutterwave) is not built in; payment is by bank transfer and confirmed by you. The WhatsApp Live Hub and AI Assistant config screens in admin are demonstrations, not connected to WhatsApp.
