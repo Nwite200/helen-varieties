@@ -12,6 +12,9 @@ import { HomePage } from './pages/HomePage';
 import { ShopPage } from './pages/ShopPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { InvoicePage } from './pages/InvoicePage';
+import { PrivacyPage, TermsPage } from './pages/LegalPages';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { RouteSeo } from './components/RouteSeo';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { TrackOrderPage } from './pages/TrackOrderPage';
@@ -39,6 +42,7 @@ function AppInner() {
     <BrowserRouter>
       {/* Central Logo Intro Animation for initial load & client route transitions */}
       <LogoIntroAnimation />
+      <RouteSeo />
 
       <div className="min-h-screen flex flex-col bg-[#F7F7F8]">
         <Navbar />
@@ -56,6 +60,8 @@ function AppInner() {
             <Route path="/about" element={<PreOrderInfoPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/wishlist" element={<ShopPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
 
             {/* No customer accounts: guests check out and track orders with their order number + secret.
                 Old account/login links go to the tracking page. */}
@@ -84,6 +90,9 @@ function AppInner() {
             <Route path="/admin/reports" element={<AdminAppLayout />} />
             <Route path="/admin/settings" element={<AdminAppLayout />} />
             <Route path="/admin/audit-logs" element={<AdminAppLayout />} />
+
+            {/* Anything else */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
         <Footer />
