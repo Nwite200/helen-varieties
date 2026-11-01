@@ -1,31 +1,69 @@
-import React, { useState } from 'react';
-import { Search, Clock, ShieldCheck, ArrowRight, Package, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Clock, ShieldCheck, ArrowRight, Package, CheckCircle2, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Order } from '../types';
 
+// Order numbers look like #HV123456. People often type them without the # or in lower case.
+const normaliseOrderNumber = (raw: string): string => {
+  const cleaned = raw.trim().toUpperCase().replace(/\s+/g, '').replace(/^#/, '');
+  return cleaned ? `#${cleaned}` : '';
+};
+
 export const TrackOrderPage: React.FC = () => {
   const { orders, formatPrice } = useApp();
-  const [orderQuery, setOrderQuery] = useState('');
+  const [params] = useSearchParams();
+  const [orderQuery, setOrderQuery] = useState(params.get('order') || '');
+  const [secretQuery, setSecretQuery] = useState(params.get('secret') || '');
   const [searchedOrder, setSearchedOrder] = useState<Order | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+  const lookup = async (rawOrder: string, rawSecret: string) => {
+    setErrorMsg('');
+    setSearchedOrder(null);
+    const orderNumber = normaliseOrderNumber(rawOrder);
+    if (!orderNumber) return;
+
+    // An order placed in this browser already has its secret saved here
+    const local = orders.find((o) => o.orderNumber.toUpperCase() === orderNumber);
+    const secret = rawSecret.trim() || local?.trackingSecret || '';
+    if (!secret) {
+      setErrorMsg('Please enter the tracking secret that was shown when you placed the order.');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderNumber)}?secret=${encodeURIComponent(secret)}`);
+      const data = await res.json().catch(() => ({} as any));
+      if (res.ok && data.order) {
+        setSearchedOrder(data.order as Order);
+      } else if (res.status === 404 || res.status === 403) {
+        setErrorMsg('We could not find an order with that number and tracking secret. Please check both and try again, or message us on WhatsApp.');
+      } else if (local && secret === local.trackingSecret) {
+        setSearchedOrder(local); // server unavailable: show the copy saved on this device
+      } else {
+        setErrorMsg('We could not reach the server right now. Please try again in a moment.');
+      }
+    } catch {
+      if (local && secret === local.trackingSecret) setSearchedOrder(local);
+      else setErrorMsg('We could not reach the server right now. Please check your connection and try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
-    const q = orderQuery.trim().toUpperCase();
-    if (!q) return;
-
-    const found = orders.find(
-      o => o.orderNumber.toUpperCase() === q || o.orderNumber.replace('#', '').toUpperCase() === q.replace('#', '')
-    );
-
-    if (found) {
-      setSearchedOrder(found);
-    } else {
-      setSearchedOrder(null);
-      setErrorMsg(`No order found matching "${orderQuery}". Try demo order #HV00123 or check your confirmation email.`);
-    }
+    lookup(orderQuery, secretQuery);
   };
+
+  // Arriving from the checkout confirmation: look the order up straight away
+  useEffect(() => {
+    if (params.get('order') && params.get('secret')) lookup(params.get('order')!, params.get('secret')!);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
@@ -37,32 +75,40 @@ export const TrackOrderPage: React.FC = () => {
           Track Your Pre-Order Status
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Enter your unique Helen Varieties Order Number to view real-time sourcing, China warehouse inspection, and air cargo flight milestones.
+          Enter your order number and the tracking secret you received at checkout to view sourcing, warehouse inspection, and cargo milestones.
         </p>
 
-        {/* Search input form */}
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto pt-4">
+        {/* Search form */}
+        <form onSubmit={handleSearch} className="space-y-2 max-w-md mx-auto pt-4">
           <input
             type="text"
-            placeholder="e.g. #HV00123"
+            required
+            aria-label="Order number"
+            placeholder="Order number, e.g. #HV482915"
             value={orderQuery}
             onChange={(e) => setOrderQuery(e.target.value)}
-            className="flex-1 text-xs px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0070DC] shadow-xs"
+            className="w-full text-xs px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0070DC] shadow-xs"
+          />
+          <input
+            type="text"
+            aria-label="Tracking secret"
+            placeholder="Tracking secret"
+            autoComplete="off"
+            value={secretQuery}
+            onChange={(e) => setSecretQuery(e.target.value)}
+            className="w-full text-xs px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:border-[#0070DC] shadow-xs font-mono"
           />
           <button
             type="submit"
-            className="px-6 py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white text-xs font-bold rounded-xl shadow-md transition"
+            disabled={isSearching}
+            className="w-full px-6 py-3 bg-[#0070DC] hover:bg-[#005BB5] disabled:opacity-60 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2"
           >
-            Track Order
+            {isSearching ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...</> : 'Track Order'}
           </button>
         </form>
 
-        <p className="text-[11px] text-slate-500">
-          Tip: Test with active demo orders <button type="button" onClick={() => setOrderQuery('#HV00123')} className="text-[#0070DC] font-mono underline font-bold">#HV00123</button> or <button type="button" onClick={() => setOrderQuery('#HV00122')} className="text-[#0070DC] font-mono underline font-bold">#HV00122</button>
-        </p>
-
         {errorMsg && (
-          <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+          <div role="alert" className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
             {errorMsg}
           </div>
         )}

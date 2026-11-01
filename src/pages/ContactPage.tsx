@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, MessageSquare, CheckCircle, ExternalLink } from 'lucide-react';
+import { Phone, MapPin, Send, MessageSquare, CheckCircle, ExternalLink } from 'lucide-react';
+import { WHATSAPP_URL, WHATSAPP_PHONE } from '../lib/whatsappMessages';
 
 export const ContactPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [linkInput, setLinkInput] = useState('');
   const [notes, setNotes] = useState('');
+  const [name, setName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
 
+  // The form has no server inbox, so the inquiry is sent through WhatsApp, where the team actually replies.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const lines = [
+      "Hello Helen's Varieties, I would like a sourcing quote.",
+      `Name: ${name.trim()}`,
+      `My WhatsApp number: ${whatsapp.trim()}`,
+      linkInput.trim() ? `Product link: ${linkInput.trim()}` : '',
+      `Details: ${notes.trim()}`,
+    ].filter(Boolean);
+    window.open(`${WHATSAPP_URL}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener,noreferrer');
     setSubmitted(true);
   };
 
@@ -18,7 +30,7 @@ export const ContactPage: React.FC = () => {
           Sourcing Concierge Desk
         </span>
         <h1 className="text-3xl font-extrabold text-slate-900">
-          Get in Touch with Helen Varieties
+          Get in Touch with Helen’s Varieties
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
           Have an inquiry, bulk order request, or want our team to source a specific 1688 product link? Reach out below.
@@ -44,18 +56,10 @@ export const ContactPage: React.FC = () => {
                 <Phone className="w-5 h-5 text-[#0070DC] flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-slate-800">Direct WhatsApp / Call Line</h4>
-                  <p className="mt-0.5">+234 (0) 801 234 5678</p>
-                  <p className="text-slate-500 text-[10px]">Monday - Saturday, 8:00 AM - 6:00 PM WAT</p>
+                  <p className="mt-0.5">{WHATSAPP_PHONE} (+234 703 258 3937)</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-[#0070DC] flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-slate-800">Procurement & Sourcing Email</h4>
-                  <p className="mt-0.5">orders@helenvarieties.com</p>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -75,9 +79,9 @@ export const ContactPage: React.FC = () => {
               <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Request Received!</h3>
+              <h3 className="text-xl font-bold text-slate-900">One last step: send it on WhatsApp</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Our Guangzhou sourcing officer will inspect the supplier, calculate current exchange-rates and message you on WhatsApp within 24 hours.
+                We opened WhatsApp with your request filled in. Press <strong>Send</strong> there so it reaches us. If nothing opened, message us directly on {WHATSAPP_PHONE}.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
@@ -98,7 +102,9 @@ export const ContactPage: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="John Doe"
+                    placeholder="Your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                   />
                 </div>
@@ -107,7 +113,9 @@ export const ContactPage: React.FC = () => {
                   <input
                     type="tel"
                     required
-                    placeholder="+234 801 234 5678"
+                    placeholder="e.g. 080 1234 5678"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                   />
                 </div>
@@ -140,7 +148,7 @@ export const ContactPage: React.FC = () => {
                 type="submit"
                 className="w-full py-3 bg-[#0070DC] hover:bg-[#005BB5] text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
               >
-                <Send className="w-4 h-4" /> Submit Sourcing Inquiry
+                <Send className="w-4 h-4" /> Send Inquiry on WhatsApp
               </button>
             </form>
           )}

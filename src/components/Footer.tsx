@@ -70,7 +70,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <Logo size="lg" theme="light" />
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-              Helen Varieties Venture is your premier international sourcing partner. 
+              Helen’s Varieties Venture is your premier international sourcing partner. 
               We connect Nigerian consumers and businesses directly with verified factories on 1688 and global manufacturers with transparent pre-order tracking.
             </p>
             <div className="flex items-center gap-3 text-xs text-slate-500 pt-2">
@@ -78,7 +78,7 @@ export const Footer: React.FC = () => {
                 <Plane className="w-4 h-4 text-blue-400" /> Air & Sea Cargo
               </span>
               <span className="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                <CreditCard className="w-4 h-4 text-emerald-400" /> Secure Payments
+                <CreditCard className="w-4 h-4 text-emerald-400" /> Pay After Confirmation
               </span>
             </div>
           </div>
@@ -104,7 +104,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/about" className="hover:text-white transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-blue-500" /> About Helen Varieties
+                  <ChevronRight className="w-3 h-3 text-blue-500" /> About Helen’s Varieties
                 </Link>
               </li>
               <li>
@@ -157,28 +157,10 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>+234 (0) 801 234 5678</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>orders@helenvarieties.com</span>
+                <a href="tel:+2347032583937" className="hover:text-white transition">07032583937</a>
               </div>
             </div>
 
-            {/* Newsletter */}
-            <div className="pt-2">
-              <p className="text-[11px] font-semibold text-slate-300 mb-1.5">Weekly 1688 Hot Deals:</p>
-              <div className="flex rounded-lg overflow-hidden border border-slate-700">
-                <input
-                  type="email"
-                  placeholder="Enter email"
-                  className="bg-slate-800 text-xs text-white px-3 py-1.5 focus:outline-none flex-1 placeholder-slate-500"
-                />
-                <button className="bg-[#0070DC] hover:bg-[#005BB5] text-white px-3 text-xs font-bold transition">
-                  Join
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

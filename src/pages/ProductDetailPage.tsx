@@ -353,7 +353,7 @@ export const ProductDetailPage: React.FC = () => {
           {activeTab === 'description' && (
             <div className="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed max-w-3xl">
               <p>{product.description}</p>
-              <h4 className="font-bold text-slate-900 mt-4">Why Pre-Order this Item with Helen Varieties?</h4>
+              <h4 className="font-bold text-slate-900 mt-4">Why Pre-Order this Item with Helen’s Varieties?</h4>
               <ul className="list-disc pl-5 space-y-1.5 text-slate-600">
                 <li>Factory-direct procurement bypasses standard retail reseller markups.</li>
                 <li>Physical quality inspection conducted in Guangzhou prior to packing.</li>

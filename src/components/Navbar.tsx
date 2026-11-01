@@ -21,7 +21,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../mockData';
 
 export const Navbar: React.FC = () => {
-  const { cart, wishlist, user, customerLogout } = useApp();
+  const { cart, wishlist } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,7 +29,6 @@ export const Navbar: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const cartTotalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -70,19 +69,12 @@ export const Navbar: React.FC = () => {
             <Link to="/contact" className="hover:underline flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5" /> Help Center
             </Link>
-            <a href="tel:+2348000000000" className="hover:underline flex items-center gap-1">
+            <a href="tel:+2347032583937" className="hover:underline flex items-center gap-1">
               <Phone className="w-3.5 h-3.5" /> Contact Us
             </a>
             <Link to="/admin/login" className="hover:underline flex items-center gap-1 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" /> Admin
             </Link>
-            <div className="flex items-center gap-2 pl-2 border-l border-white/30 text-white/80">
-              <span className="hover:text-white cursor-pointer">FB</span>
-              <span>•</span>
-              <span className="hover:text-white cursor-pointer">IG</span>
-              <span>•</span>
-              <span className="hover:text-white cursor-pointer">TikTok</span>
-            </div>
           </div>
         </div>
       </div>
@@ -158,89 +150,19 @@ export const Navbar: React.FC = () => {
 
           {/* Action Buttons: Account, Wishlist, Cart */}
           <div className="flex items-center gap-3 sm:gap-6">
-            {/* Account */}
-            <div className="relative">
-              <button
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-2 text-slate-700 hover:text-[#0070DC] transition p-1 text-left"
-              >
-                <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
-                  <UserIcon className="w-5 h-5" />
-                </div>
-                <div className="hidden lg:block">
-                  <div className="text-[11px] text-slate-500 font-medium">
-                    {user ? `Hello, ${user.name.split(' ')[0]}` : 'Sign In'}
-                  </div>
-                  <div className="text-xs font-bold text-slate-800 flex items-center gap-0.5">
-                    Account <ChevronDown className="w-3 h-3 text-slate-500" />
-                  </div>
-                </div>
-              </button>
-
-              {isUserDropdownOpen && (
-                <div 
-                  className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-2"
-                  onMouseLeave={() => setIsUserDropdownOpen(false)}
-                >
-                  {user ? (
-                    <div>
-                      <div className="px-3 py-2 border-b border-slate-100">
-                        <p className="text-xs font-bold text-slate-800 truncate">{user.name}</p>
-                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
-                        <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                          {user.role === 'admin' ? 'Administrator' : 'Customer Account'}
-                        </span>
-                      </div>
-                      <div className="py-1">
-                        <Link
-                          to={user.role === 'admin' ? '/admin' : '/dashboard'}
-                          className="flex items-center px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                        >
-                          {user.role === 'admin' ? 'Admin Dashboard' : 'My Orders & Dashboard'}
-                        </Link>
-                        {user.role === 'customer' && (
-                          <Link
-                            to="/admin"
-                            className="flex items-center px-3 py-2 text-xs text-blue-600 hover:bg-blue-50 rounded-lg font-medium"
-                            onClick={() => setIsUserDropdownOpen(false)}
-                          >
-                            Switch to Admin View
-                          </Link>
-                        )}
-                        <button
-                          onClick={() => {
-                            customerLogout();
-                            setIsUserDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg font-semibold"
-                        >
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2 text-center">
-                      <p className="text-xs text-slate-600 mb-3">Sign in to track orders and save pre-order items.</p>
-                      <Link
-                        to="/auth/login"
-                        className="block w-full py-2 bg-[#0070DC] text-white text-xs font-bold rounded-lg hover:bg-[#005BB5] transition"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                      >
-                        Sign In
-                      </Link>
-                      <Link
-                        to="/auth/register"
-                        className="block w-full py-1.5 mt-2 text-xs text-slate-600 hover:text-[#0070DC] font-medium"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                      >
-                        Create an Account
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Track order (no customer accounts: guests track with order number + secret) */}
+            <Link
+              to="/track"
+              className="flex items-center gap-2 text-slate-700 hover:text-[#0070DC] transition p-1"
+            >
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                <UserIcon className="w-5 h-5" />
+              </div>
+              <div className="hidden lg:block text-left">
+                <div className="text-[11px] text-slate-500 font-medium">My Orders</div>
+                <div className="text-xs font-bold text-slate-800">Track Order</div>
+              </div>
+            </Link>
 
             {/* Wishlist */}
             <Link

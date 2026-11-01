@@ -19,28 +19,26 @@ import {
   X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { buildInvoiceHtml, openInvoice } from '../lib/invoice';
+import { buildInvoiceHtml, openInvoice, WHATSAPP_PHONE } from '../lib/invoice';
 import { Order } from '../types';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, formatPrice, createOrder, user } = useApp();
+  const { cart, formatPrice, createOrder } = useApp();
   const navigate = useNavigate();
 
   // Mode: Guest Checkout vs Login / Register Account
-  const [checkoutMode, setCheckoutMode] = useState<'guest' | 'authenticated'>(user ? 'authenticated' : 'guest');
+  const [checkoutMode, setCheckoutMode] = useState<'guest' | 'authenticated'>('guest');
 
   // Multi-step: 1. Customer & Shipping Details, 2. Review Order, 3. Payment, 4. Confirmation
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form states
-  const defaultAddress = user?.addresses && user.addresses.length > 0 ? user.addresses[0] : null;
-  const [fullName, setFullName] = useState(user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [address, setAddress] = useState(defaultAddress?.street || '');
-  const [city, setCity] = useState(defaultAddress?.city || 'Lagos');
-  const [state, setState] = useState(defaultAddress?.state || 'Lagos State');
-  const [selectedPayment, setSelectedPayment] = useState<'paystack' | 'flutterwave' | 'bank_transfer'>('paystack');
+    const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [agreeDisclaimer, setAgreeDisclaimer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrderNumber, setCreatedOrderNumber] = useState('');
@@ -132,7 +130,7 @@ export const CheckoutPage: React.FC = () => {
       }));
 
       const secret = Math.random().toString(36).substring(2, 9);
-      const isGuest = !user || checkoutMode === 'guest';
+      const isGuest = true;
 
       const newOrder = await createOrder({
         customerName: fullName.trim(),
@@ -152,12 +150,8 @@ export const CheckoutPage: React.FC = () => {
         subtotal,
         shippingNote: 'Not included. Calculated based on actual measured weight upon landing at Lagos consolidation.',
         totalAmount: subtotal,
-        paymentMethod: selectedPayment === 'paystack' 
-          ? 'Paystack (Card/USSD/Transfer)' 
-          : selectedPayment === 'flutterwave' 
-          ? 'Flutterwave Gateway' 
-          : 'Direct Bank Transfer',
-        paymentReference: `PAY_${Math.floor(100000 + Math.random() * 900000)}`,
+        paymentMethod: 'Bank transfer (details sent on WhatsApp)',
+        paymentReference: '',
         paymentStatus: 'Unpaid',
         source: 'website'
       });
@@ -207,50 +201,12 @@ export const CheckoutPage: React.FC = () => {
       {/* STEP 1: GUEST VS AUTHENTICATED & DELIVERY DETAILS */}
       {currentStep === 1 && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm max-w-2xl mx-auto space-y-6">
-          {/* Checkout Mode Selector */}
-          {!user ? (
-            <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#0070DC] block">
-                Choose Checkout Preference
-              </span>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCheckoutMode('guest')}
-                  className={`p-3 rounded-xl border text-left transition ${
-                    checkoutMode === 'guest'
-                      ? 'border-[#0070DC] bg-white text-[#0070DC] font-bold shadow-xs'
-                      : 'border-slate-200 bg-white/50 text-slate-600 hover:bg-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span className="text-xs">Continue as Guest</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-normal mt-1">No account creation required.</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => navigate('/login?redirect=/checkout')}
-                  className="p-3 rounded-xl border border-slate-200 bg-white/50 hover:bg-white text-slate-600 text-left transition"
-                >
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-[#0070DC]" />
-                    <span className="text-xs font-bold text-slate-800">Sign In</span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-normal mt-1">Access saved addresses & history.</p>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs flex items-center justify-between">
-              <span>Checking out as <strong>{user.name}</strong> ({user.email})</span>
-              <Link to="/account" className="font-bold underline text-emerald-900">
-                Manage Account
-              </Link>
-            </div>
-          )}
+          <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+            <User className="w-4 h-4 text-[#0070DC] mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-slate-700 leading-relaxed">
+              <strong className="text-[#0070DC]">Guest checkout.</strong> No account is needed. You will get an order number and a tracking secret to follow your order.
+            </p>
+          </div>
 
           <div className="border-b border-slate-100 pb-3">
             <h2 className="text-lg font-bold text-slate-900">
@@ -274,7 +230,7 @@ export const CheckoutPage: React.FC = () => {
               <input
                 type="text"
                 required
-                placeholder="John Doe"
+                placeholder="Your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
@@ -289,7 +245,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="relative">
                   <input
                     type="email"
-                    placeholder="johndoe@example.com"
+                    placeholder="you@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
@@ -305,7 +261,7 @@ export const CheckoutPage: React.FC = () => {
                 <div className="relative">
                   <input
                     type="tel"
-                    placeholder="07032583937 or +234..."
+                    placeholder="e.g. 080 1234 5678 (WhatsApp preferred)"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3.5 py-2.5 pl-9 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
@@ -320,7 +276,7 @@ export const CheckoutPage: React.FC = () => {
               <textarea
                 required
                 rows={2}
-                placeholder="123 Main Street, Victoria Island..."
+                placeholder="House number, street, landmark"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
@@ -334,6 +290,7 @@ export const CheckoutPage: React.FC = () => {
                   type="text"
                   required
                   value={city}
+                  placeholder="e.g. Ikeja"
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                 />
@@ -345,6 +302,7 @@ export const CheckoutPage: React.FC = () => {
                   type="text"
                   required
                   value={state}
+                  placeholder="e.g. Lagos"
                   onChange={(e) => setState(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0070DC]"
                 />
@@ -440,65 +398,17 @@ export const CheckoutPage: React.FC = () => {
       {currentStep === 3 && (
         <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm max-w-2xl mx-auto space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h2 className="text-lg font-bold text-slate-900">Payment Option</h2>
-            <span className="text-xs font-bold text-[#0070DC]">Payable Now: {formatPrice(subtotal)}</span>
+            <h2 className="text-lg font-bold text-slate-900">Payment</h2>
+            <span className="text-xs font-bold text-[#0070DC]">Products total: {formatPrice(subtotal)}</span>
           </div>
 
-          <div className="space-y-3">
-            <label className={`block border p-4 rounded-2xl cursor-pointer transition ${selectedPayment === 'paystack' ? 'border-[#0070DC] bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={selectedPayment === 'paystack'}
-                    onChange={() => setSelectedPayment('paystack')}
-                    className="accent-[#0070DC]"
-                  />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Paystack (Debit Card / USSD / Bank Transfer)</h4>
-                    <p className="text-[11px] text-slate-500">Instant verification with 3D-secure authentication</p>
-                  </div>
-                </div>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Verified</span>
-              </div>
-            </label>
-
-            <label className={`block border p-4 rounded-2xl cursor-pointer transition ${selectedPayment === 'flutterwave' ? 'border-[#0070DC] bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={selectedPayment === 'flutterwave'}
-                    onChange={() => setSelectedPayment('flutterwave')}
-                    className="accent-[#0070DC]"
-                  />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Flutterwave Gateway</h4>
-                    <p className="text-[11px] text-slate-500">Cards, Apple Pay, Barter, mobile money</p>
-                  </div>
-                </div>
-              </div>
-            </label>
-
-            <label className={`block border p-4 rounded-2xl cursor-pointer transition ${selectedPayment === 'bank_transfer' ? 'border-[#0070DC] bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked={selectedPayment === 'bank_transfer'}
-                    onChange={() => setSelectedPayment('bank_transfer')}
-                    className="accent-[#0070DC]"
-                  />
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">Direct Bank Transfer</h4>
-                    <p className="text-[11px] text-slate-500">Submit proof of payment for manual accountant reconciliation</p>
-                  </div>
-                </div>
-              </div>
-            </label>
+          <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-2">
+            <h4 className="text-xs font-extrabold text-[#0070DC] uppercase tracking-wider">How payment works</h4>
+            <ol className="text-xs text-slate-700 leading-relaxed list-decimal pl-4 space-y-1">
+              <li>Submit your pre-order. Nothing is charged online.</li>
+              <li>Our team confirms availability and the exact amount with you on WhatsApp ({WHATSAPP_PHONE}).</li>
+              <li>We send the account details for a bank transfer. Your order starts once payment is confirmed.</li>
+            </ol>
           </div>
 
           {/* Mandatory Shipping Disclaimer Box */}
@@ -594,25 +504,6 @@ export const CheckoutPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Optional Guest Account Conversion */}
-          {checkoutMode === 'guest' && !user && (
-            <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 text-left space-y-2">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-[#0070DC]" />
-                <h4 className="text-xs font-bold text-slate-900">Want to track this order seamlessly?</h4>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-normal">
-                Convert this guest pre-order into a permanent customer account to view live air cargo flight milestones and save delivery addresses.
-              </p>
-              <Link
-                to={`/register?email=${encodeURIComponent(email)}&phone=${encodeURIComponent(phone)}&name=${encodeURIComponent(fullName)}`}
-                className="inline-block px-4 py-2 bg-[#0070DC] hover:bg-[#005BB5] text-white text-[11px] font-bold rounded-xl shadow-xs transition"
-              >
-                Create Free Account (Optional)
-              </Link>
-            </div>
-          )}
-
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="button"
@@ -622,7 +513,7 @@ export const CheckoutPage: React.FC = () => {
               <FileText className="w-3.5 h-3.5" /> View & Print Receipt
             </button>
             <Link
-              to="/track"
+              to={`/track?order=${encodeURIComponent(createdOrderNumber)}&secret=${encodeURIComponent(trackingSecret)}`}
               className="flex-1 py-3 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm transition text-center"
             >
               Track Sourcing Progress

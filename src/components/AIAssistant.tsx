@@ -37,7 +37,8 @@ const WELCOME_STORAGE_KEY = 'hv_ai_welcome_dismissed';
 const WELCOME_DELAY_MS = 2000;
 
 export const AIAssistant: React.FC = () => {
-  const { products, orders, cart, user, formatPrice, addToCart, getWhatsAppLink, aiConfig } = useApp();
+  const { products, orders, cart, formatPrice, addToCart, getWhatsAppLink, aiConfig } = useApp();
+  const user = null; // guests only: the assistant never has a customer profile
   const {
     speak,
     pause,

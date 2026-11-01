@@ -12,7 +12,7 @@ import {
   WhatsAppConfig,
   AIAssistantConfig
 } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_ORDERS } from '../mockData';
+import { INITIAL_PRODUCTS } from '../mockData';
 import { 
   INITIAL_AUDIT_LOGS, 
   INITIAL_WHATSAPP_CONVERSATIONS, 
@@ -25,7 +25,6 @@ interface AppContextType {
   orders: Order[];
   cart: CartItem[];
   wishlist: string[];
-  user: User | null;
   adminUser: User | null;
   auditLogs: AuditLog[];
   whatsappConversations: WhatsAppConversation[];
@@ -47,14 +46,6 @@ interface AppContextType {
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   
-  // Customer Auth
-  customerRegister: (name: string, email: string, phone: string, password?: string) => { success: boolean; error?: string };
-  customerLogin: (email: string, password?: string) => { success: boolean; error?: string };
-  customerLogout: () => void;
-  updateCustomerProfile: (data: Partial<User>) => void;
-  addCustomerAddress: (address: Omit<UserAddress, 'id'>) => void;
-  deleteCustomerAddress: (id: string) => void;
-
   // Admin Auth & Access
   adminLogin: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   adminLogout: () => void;
@@ -87,7 +78,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('hv_orders');
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [aiConfig, setAiConfig] = useState<AIAssistantConfig>(() => {
@@ -101,52 +92,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('hv_cart');
-    return saved ? JSON.parse(saved) : [
-      {
-        productId: 'prod-1',
-        product: INITIAL_PRODUCTS[0],
-        selectedVariants: { 'Color': 'White' },
-        quantity: 1,
-        unitPrice: 18500
-      },
-      {
-        productId: 'prod-2',
-        product: INITIAL_PRODUCTS[1],
-        selectedVariants: { 'Band Color': 'Midnight Black' },
-        quantity: 1,
-        unitPrice: 32000
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [wishlist, setWishlist] = useState<string[]>(() => {
     const saved = localStorage.getItem('hv_wishlist');
-    return saved ? JSON.parse(saved) : ['prod-1', 'prod-2'];
-  });
-
-  // Active Customer Session
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('hv_customer_session');
-    return saved ? JSON.parse(saved) : {
-      id: 'cust-1',
-      name: 'John Doe',
-      email: 'johndoe@example.com',
-      phone: '08012345678',
-      role: 'customer',
-      isEmailVerified: true,
-      createdAt: '2026-10-20',
-      addresses: [
-        {
-          id: 'addr-1',
-          fullName: 'John Doe',
-          phone: '+234 801 234 5678',
-          street: '123 Main Street, Victoria Island',
-          city: 'Lagos',
-          state: 'Lagos State',
-          isDefault: true
-        }
-      ]
-    };
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Separate, Protected Admin Session
@@ -175,10 +126,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { localStorage.setItem('hv_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('hv_cart', JSON.stringify(cart)); }, [cart]);
   useEffect(() => { localStorage.setItem('hv_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
-  useEffect(() => {
-    if (user) localStorage.setItem('hv_customer_session', JSON.stringify(user));
-    else localStorage.removeItem('hv_customer_session');
-  }, [user]);
   useEffect(() => {
     if (adminUser) localStorage.setItem('hv_admin_session', JSON.stringify(adminUser));
     else localStorage.removeItem('hv_admin_session');
@@ -396,72 +343,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (p) logAuditEvent('DELETE_PRODUCT', p.sku, `Removed product ${p.name}`);
   };
 
-  // Customer Authentication & Profile
-  const customerRegister = (name: string, email: string, phone: string, _password?: string) => {
-    const newUser: User = {
-      id: `cust-${Date.now()}`,
-      name,
-      email: email.toLowerCase().trim(),
-      phone,
-      role: 'customer',
-      isEmailVerified: false,
-      createdAt: new Date().toISOString().split('T')[0],
-      addresses: []
-    };
-    setUser(newUser);
-    return { success: true };
-  };
-
-  const customerLogin = (email: string, _password?: string) => {
-    const existing: User = {
-      id: 'cust-1',
-      name: email.split('@')[0].replace('.', ' '),
-      email: email.toLowerCase().trim(),
-      phone: '+234 801 234 5678',
-      role: 'customer',
-      isEmailVerified: true,
-      createdAt: '2026-10-28',
-      addresses: [
-        {
-          id: 'addr-1',
-          fullName: 'John Doe',
-          phone: '+234 801 234 5678',
-          street: '123 Main Street, Victoria Island',
-          city: 'Lagos',
-          state: 'Lagos State',
-          isDefault: true
-        }
-      ]
-    };
-    setUser(existing);
-    return { success: true };
-  };
-
-  const customerLogout = () => {
-    setUser(null);
-  };
-
-  const updateCustomerProfile = (data: Partial<User>) => {
-    if (!user) return;
-    setUser({ ...user, ...data });
-  };
-
-  const addCustomerAddress = (address: Omit<UserAddress, 'id'>) => {
-    if (!user) return;
-    const newAddress: UserAddress = {
-      ...address,
-      id: `addr-${Date.now()}`
-    };
-    const updated = [...(user.addresses || []), newAddress];
-    setUser({ ...user, addresses: updated });
-  };
-
-  const deleteCustomerAddress = (id: string) => {
-    if (!user) return;
-    const updated = (user.addresses || []).filter(a => a.id !== id);
-    setUser({ ...user, addresses: updated });
-  };
-
   // Admin Authentication & Access
   // The login is checked on the server (Cloudflare secrets); the browser only holds a signed, expiring token.
   const adminLogin = async (email: string, password?: string): Promise<{ success: boolean; error?: string }> => {
@@ -479,7 +360,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try { localStorage.setItem(ADMIN_TOKEN_KEY, data.token); } catch { /* storage unavailable */ }
       const adminSession: User = {
         id: 'admin-super',
-        name: 'Helen Varieties Super Admin',
+        name: 'Helen’s Varieties Super Admin',
         email: data.user?.email || cleanEmail,
         phone: '+234 703 258 3937',
         role: 'super_admin',
@@ -567,7 +448,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         orders,
         cart,
         wishlist,
-        user,
         adminUser,
         auditLogs,
         whatsappConversations,
@@ -582,12 +462,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addProduct,
         updateProduct,
         deleteProduct,
-        customerRegister,
-        customerLogin,
-        customerLogout,
-        updateCustomerProfile,
-        addCustomerAddress,
-        deleteCustomerAddress,
         adminLogin,
         adminLogout,
         logAuditEvent,

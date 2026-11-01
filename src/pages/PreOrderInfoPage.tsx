@@ -21,7 +21,7 @@ export const PreOrderInfoPage: React.FC = () => {
           Wholesale Direct Sourcing Guide
         </span>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-          How Pre-Ordering Works with Helen Varieties
+          How Pre-Ordering Works with Helen’s Varieties
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
           We bring 1688 and Chinese factory wholesale pricing directly to Nigerian shoppers and retail entrepreneurs with complete transparency, quality inspection, and zero hidden markups.
@@ -139,7 +139,7 @@ export const PreOrderInfoPage: React.FC = () => {
           <div className="pt-3 space-y-1">
             <h4 className="font-bold text-slate-900 text-sm">How do I track my parcel?</h4>
             <p className="text-slate-600 leading-relaxed">
-              Every pre-order generates a unique reference code (e.g., #HV00123). You can paste this code on our Track Order page at any time to see the live milestone log.
+              Every pre-order generates a unique reference code (e.g., #HV482915). You can paste this code on our Track Order page at any time to see the live milestone log.
             </p>
           </div>
         </div>

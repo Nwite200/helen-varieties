@@ -30,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({
       <div className={`relative ${dimensions.img} flex-shrink-0 rounded-xl overflow-hidden bg-white shadow-xs transition-transform duration-200 group-hover:scale-105 flex items-center justify-center border border-slate-100`}>
         <img
           src={logoImg}
-          alt="Helen Varieties Venture Logo"
+          alt="Helen’s Varieties Venture Logo"
           className="w-full h-full object-contain"
           loading="eager"
         />
@@ -39,7 +39,7 @@ export const Logo: React.FC<LogoProps> = ({
       {showWordmark && (
         <div className="flex flex-col leading-tight">
           <span className={`font-extrabold tracking-tight ${dimensions.text} ${isWhite ? 'text-white' : 'text-[#0070DC]'}`}>
-            Helen<span className={isWhite ? 'text-white/95' : 'text-[#191919]'}> Varieties</span>
+            Helen’s<span className={isWhite ? 'text-white/95' : 'text-[#191919]'}> Varieties</span>
           </span>
           <span className={`font-semibold tracking-wider uppercase ${dimensions.sub} ${isWhite ? 'text-white/70' : 'text-slate-500'}`}>
             Venture • Pre-Order
