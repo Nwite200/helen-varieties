@@ -129,15 +129,15 @@ export const CheckoutPage: React.FC = () => {
         totalPrice: i.unitPrice * i.quantity
       }));
 
-      const secret = Math.random().toString(36).substring(2, 9);
       const isGuest = true;
 
-      const newOrder = await createOrder({
+      let newOrder;
+      try {
+      newOrder = await createOrder({
         customerName: fullName.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim(),
         isGuest,
-        trackingSecret: secret,
         deliveryAddress: {
           fullName: fullName.trim(),
           phone: phone.trim(),
@@ -155,10 +155,15 @@ export const CheckoutPage: React.FC = () => {
         paymentStatus: 'Unpaid',
         source: 'website'
       });
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'We could not place your order. Please try again or contact us on WhatsApp.');
+        setIsSubmitting(false);
+        return;
+      }
 
       setCreatedOrderNumber(newOrder.orderNumber);
       // Show the secret the server actually saved (it generates its own), falling back to the local one
-      setTrackingSecret(newOrder.trackingSecret || secret);
+      setTrackingSecret(newOrder.trackingSecret || '');
       setCreatedOrder(newOrder);
       setIsSubmitting(false);
       setCurrentStep(4);

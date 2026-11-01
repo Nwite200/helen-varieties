@@ -3,6 +3,11 @@
  * Secure authentication, guest pre-order checkout validation, and D1 persistence
  */
 
+import {
+  listProducts, cleanProductInput, saveProduct, uploadImage, serveMedia, priceItems,
+  listAdminOrders, updateAdminOrder, logAudit, listAudit, sitemapXml,
+} from './catalogue';
+
 export interface Env {
   DB?: any;
   MEDIA_BUCKET?: any;
@@ -115,6 +120,21 @@ function isAllowedOrigin(origin: string | null, url: URL, env: Env): boolean {
   return [...DEFAULT_ALLOWED_ORIGINS, ...extra].includes(origin);
 }
 
+/** Best-effort brute-force brake: 8 failed logins per IP per 15 minutes (per Worker instance).
+ *  For a hard limit add a Cloudflare WAF rate-limiting rule (see OPERATIONS.md). */
+const failedLogins = new Map<string, { n: number; reset: number }>();
+function loginBlocked(ip: string): boolean {
+  const rec = failedLogins.get(ip);
+  if (rec && rec.reset < Date.now()) { failedLogins.delete(ip); return false; }
+  return Boolean(rec && rec.n >= 8);
+}
+function noteFailedLogin(ip: string): void {
+  const rec = failedLogins.get(ip);
+  if (!rec || rec.reset < Date.now()) failedLogins.set(ip, { n: 1, reset: Date.now() + 15 * 60 * 1000 });
+  else rec.n += 1;
+  if (failedLogins.size > 500) failedLogins.clear();
+}
+
 const clampStr = (v: any, max: number): string => String(v ?? '').trim().slice(0, max);
 
 export default {
@@ -190,21 +210,20 @@ export default {
         if (items.length > 50) {
           return Response.json({ error: 'Too many items in one order.' }, { status: 400, headers: corsHeaders });
         }
-        for (const it of items) {
-          const qty = Number(it?.quantity);
-          const price = Number(it?.unitPrice);
-          if (!Number.isFinite(qty) || qty < 1 || qty > 1000 || !Number.isFinite(price) || price < 0) {
-            return Response.json({ error: 'Invalid item quantity or price.' }, { status: 400, headers: corsHeaders });
-          }
+        if (!env.DB) {
+          return Response.json({ error: 'Ordering is temporarily unavailable. Please contact us on WhatsApp.' }, { status: 503, headers: corsHeaders });
         }
-        // NOTE: unit prices are still supplied by the browser. They can only be verified
-        // server-side once products live in D1 (planned next step).
+        // Prices always come from the database, never from the browser.
+        const priced = await priceItems(env, items);
+        if ('error' in priced) {
+          return Response.json({ error: priced.error }, { status: 400, headers: corsHeaders });
+        }
 
         // Generate unique order number and tracking secret (cryptographically random)
         const orderNumber = `#HV${100000 + (parseInt(randomDigits(6), 10) % 900000)}`;
         const trackingSecret = randomToken(12);
         const orderId = `ord-${crypto.randomUUID()}`;
-        const subtotal = items.reduce((s: number, it: any) => s + (Number(it.unitPrice) || 0) * (Number(it.quantity) || 0), 0);
+        const subtotal = priced.subtotal;
         const now = new Date().toISOString();
 
         // Persist to D1 when available (production). Stateless fallback in local dev.
@@ -224,16 +243,11 @@ export default {
               'Unpaid', null, 'website', trackingSecret, now
             ).run();
 
-            for (const it of items) {
+            for (const line of priced.lines) {
               await env.DB.prepare(
-                `INSERT INTO order_items (id, order_id, product_id, product_name, sku, selected_variants, quantity, unit_price, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-              ).bind(
-                `oi-${crypto.randomUUID()}`,
-                orderId, it.productId ? clampStr(it.productId, 80) : null, clampStr(it.productName || it.name || 'Item', 200),
-                clampStr(it.sku, 80), JSON.stringify(it.selectedVariants || {}).slice(0, 1000),
-                Number(it.quantity) || 1, Number(it.unitPrice) || 0,
-                (Number(it.unitPrice) || 0) * (Number(it.quantity) || 1)
-              ).run();
+                `INSERT INTO order_items (id, order_id, product_id, product_name, sku, selected_variants, quantity, unit_price, total_price, product_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              ).bind(`oi-${crypto.randomUUID()}`, orderId, line.productId, line.name, line.sku, line.variants,
+                line.quantity, line.unitPrice, line.total, line.image).run();
             }
 
             await env.DB.prepare(
@@ -249,6 +263,9 @@ export default {
           success: true,
           orderNumber,
           trackingSecret,
+          subtotal,
+          totalAmount: subtotal,
+          items: priced.lines.map((l: any) => ({ productId: l.productId, productName: l.name, productImage: l.image, sku: l.sku, selectedVariants: JSON.parse(l.variants), quantity: l.quantity, unitPrice: l.unitPrice, totalPrice: l.total })),
           isGuest: Boolean(isGuest),
           customerName,
           customerEmail: customerEmail || null,
@@ -308,7 +325,7 @@ export default {
             items: (itemsRes.results || []).map((it: any) => ({
               productId: it.product_id,
               productName: it.product_name,
-              productImage: '',
+              productImage: it.product_image || '',
               sku: it.sku,
               selectedVariants: safeJson(it.selected_variants, {}),
               quantity: it.quantity,
@@ -336,6 +353,10 @@ export default {
         if (!adminEmail || !adminPassword) {
           return Response.json({ error: 'Admin login is not configured on the server.' }, { status: 503, headers: corsHeaders });
         }
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (loginBlocked(ip)) {
+          return Response.json({ error: 'Too many failed attempts. Please wait 15 minutes and try again.' }, { status: 429, headers: corsHeaders });
+        }
         let creds: any;
         try {
           creds = await request.json();
@@ -347,6 +368,7 @@ export default {
         // Evaluate both checks so timing doesn't reveal which one failed
         const [emailOk, passOk] = await Promise.all([safeEqual(email, adminEmail), safeEqual(password, adminPassword)]);
         if (!emailOk || !passOk) {
+          noteFailedLogin(ip);
           await new Promise((resolve) => setTimeout(resolve, 600)); // slows down password guessing
           return Response.json({ error: 'Invalid administrator credentials.' }, { status: 401, headers: corsHeaders });
         }
@@ -369,6 +391,70 @@ export default {
           return Response.json({ error: 'Unauthorized administrative access.' }, { status: 401, headers: corsHeaders });
         }
         return Response.json({ authorized: true, role: session.role, email: session.sub, expiresAt: session.exp }, { headers: corsHeaders });
+      }
+
+      // 5. Public catalogue + media + sitemap
+      if (path === '/api/products' && method === 'GET') {
+        if (!env.DB) return Response.json({ products: [] }, { headers: corsHeaders });
+        const products = await listProducts(env);
+        return Response.json({ products }, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=30' } });
+      }
+      if (path.startsWith('/api/media/') && method === 'GET') {
+        return serveMedia(env, path.slice('/api/media/'.length));
+      }
+      if (path === '/sitemap.xml' && method === 'GET') {
+        return new Response(await sitemapXml(env, url.origin), { headers: { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' } });
+      }
+
+      // 6. Admin-only management endpoints (valid signed token required)
+      if (path.startsWith('/api/admin/') && path !== '/api/admin/login' && path !== '/api/admin/verify') {
+        const admin = await verifyAdminToken(env, request);
+        if (!admin) return Response.json({ error: 'Unauthorized administrative access.' }, { status: 401, headers: corsHeaders });
+        if (!env.DB) return Response.json({ error: 'Database not available.' }, { status: 503, headers: corsHeaders });
+        const actor = admin.sub;
+
+        if (path === '/api/admin/upload' && method === 'POST') {
+          const r = await uploadImage(env, request);
+          if (r instanceof Response) return new Response(r.body, { status: r.status, headers: { ...Object.fromEntries(r.headers), ...corsHeaders } });
+          return Response.json({ success: true, url: r.url }, { status: 201, headers: corsHeaders });
+        }
+        if (path === '/api/admin/products' && method === 'POST') {
+          const cleaned = cleanProductInput(await request.json().catch(() => null));
+          if ('error' in cleaned) return Response.json({ error: cleaned.error }, { status: 400, headers: corsHeaders });
+          const saved = await saveProduct(env, null, cleaned.data);
+          if ('error' in saved) return Response.json({ error: saved.error }, { status: saved.status, headers: corsHeaders });
+          await logAudit(env, actor, 'product.create', saved.product.sku, saved.product.name);
+          return Response.json({ success: true, product: saved.product }, { status: 201, headers: corsHeaders });
+        }
+        const pm = path.match(/^\/api\/admin\/products\/([^/]+)$/);
+        if (pm && method === 'PUT') {
+          const cleaned = cleanProductInput(await request.json().catch(() => null));
+          if ('error' in cleaned) return Response.json({ error: cleaned.error }, { status: 400, headers: corsHeaders });
+          const saved = await saveProduct(env, decodeURIComponent(pm[1]), cleaned.data);
+          if ('error' in saved) return Response.json({ error: saved.error }, { status: saved.status, headers: corsHeaders });
+          await logAudit(env, actor, 'product.update', saved.product.sku, saved.product.name);
+          return Response.json({ success: true, product: saved.product }, { headers: corsHeaders });
+        }
+        if (pm && method === 'DELETE') {
+          const id = decodeURIComponent(pm[1]);
+          const p = await env.DB.prepare('SELECT sku, name FROM products WHERE id = ?').bind(id).first();
+          if (!p) return Response.json({ error: 'Product not found.' }, { status: 404, headers: corsHeaders });
+          await env.DB.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+          await logAudit(env, actor, 'product.delete', p.sku, p.name);
+          return Response.json({ success: true }, { headers: corsHeaders });
+        }
+        if (path === '/api/admin/orders' && method === 'GET') {
+          return Response.json({ orders: await listAdminOrders(env) }, { headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
+        }
+        const om = path.match(/^\/api\/admin\/orders\/([^/]+)$/);
+        if (om && method === 'PUT') {
+          const r = await updateAdminOrder(env, decodeURIComponent(om[1]), await request.json().catch(() => ({})), actor);
+          if ('error' in r) return Response.json({ error: r.error }, { status: r.status, headers: corsHeaders });
+          return Response.json({ success: true, order: r.order }, { headers: corsHeaders });
+        }
+        if (path === '/api/admin/audit' && method === 'GET') {
+          return Response.json({ logs: await listAudit(env) }, { headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
+        }
       }
 
       return Response.json({ error: 'Not found' }, { status: 404, headers: corsHeaders });

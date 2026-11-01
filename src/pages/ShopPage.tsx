@@ -14,7 +14,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../mockData';
 
 export const ShopPage: React.FC = () => {
-  const { products, formatPrice } = useApp();
+  const { products, productsLoading, productsError, refreshProducts, getWhatsAppLink, formatPrice } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialCategory = searchParams.get('category') || 'All Categories';
@@ -233,7 +233,33 @@ export const ShopPage: React.FC = () => {
 
         {/* Right Products Area */}
         <main className="lg:col-span-3">
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3" role="status">
+              <h3 className="text-base font-bold text-slate-800">
+                {productsLoading ? 'Loading products…' : productsError ? 'We could not load the products' : 'Our catalogue is being updated'}
+              </h3>
+              {!productsLoading && (
+                <>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    {productsError
+                      ? 'Please check your connection and try again.'
+                      : 'New items are being added. Tell us what you need and we will source it for you.'}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    {productsError && (
+                      <button onClick={() => refreshProducts()} className="px-4 py-2 bg-[#0070DC] text-white text-xs font-bold rounded-lg hover:bg-[#005BB5] transition">
+                        Try again
+                      </button>
+                    )}
+                    <a href={getWhatsAppLink('Hello, I would like to request a product to be sourced.')} target="_blank" rel="noopener noreferrer"
+                       className="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+                      Request an item on WhatsApp
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
                 <Search className="w-6 h-6" />

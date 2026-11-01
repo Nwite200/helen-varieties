@@ -39,12 +39,17 @@ interface AppContextType {
   
   // Order Actions
   createOrder: (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>) => Promise<Order>;
-  updateOrderStatus: (orderId: string, status: OrderStatus, note?: string) => void;
+  updateOrderStatus: (orderId: string, status: OrderStatus, note?: string) => Promise<void>;
+  refreshOrders: () => Promise<void>;
   
   // Product Actions
-  addProduct: (product: Omit<Product, 'id'>) => Product;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (productId: string) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<Product>;
+  updateProduct: (product: Product) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
+  uploadProductImage: (file: File) => Promise<string>;
+  productsLoading: boolean;
+  productsError: boolean;
+  refreshProducts: () => Promise<void>;
   
   // Admin Auth & Access
   adminLogin: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
@@ -71,15 +76,61 @@ const ADMIN_TOKEN_KEY = 'hv_admin_token';
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('hv_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
+  // The catalogue lives on the server (D1). Demo products are only used while developing locally.
+  const [products, setProducts] = useState<Product[]>(() => (import.meta.env.DEV ? INITIAL_PRODUCTS : []));
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState(false);
 
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('hv_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Orders are only loaded for a signed-in administrator, straight from the server.
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const getAdminToken = (): string | null => {
+    try { return localStorage.getItem(ADMIN_TOKEN_KEY); } catch { return null; }
+  };
+
+  const adminFetch = async (path: string, init: RequestInit = {}): Promise<any> => {
+    const token = getAdminToken();
+    const isBody = typeof init.body === 'string';
+    const res = await fetch(path, {
+      ...init,
+      headers: {
+        ...(isBody ? { 'Content-Type': 'application/json' } : {}),
+        ...(init.headers || {}),
+        Authorization: `Bearer ${token || ''}`,
+      },
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (res.status === 401) {
+      try { localStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* ignore */ }
+      setAdminUser(null);
+      throw new Error('Your admin session has expired. Please sign in again.');
+    }
+    if (!res.ok) throw new Error(data.error || 'Request failed. Please try again.');
+    return data;
+  };
+
+  const refreshProducts = async (): Promise<void> => {
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('bad status');
+      const data = await res.json() as { products?: Product[] };
+      const list = Array.isArray(data.products) ? data.products : [];
+      // In local development, keep the demo catalogue when the API has nothing yet.
+      if (list.length || !import.meta.env.DEV) setProducts(list);
+      setProductsError(false);
+    } catch {
+      if (!import.meta.env.DEV) setProductsError(true);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Old per-browser copies are no longer used.
+    try { ['hv_products', 'hv_orders', 'hv_audit_logs', 'hv_whatsapp_convs', 'hv_customer_session'].forEach((k) => localStorage.removeItem(k)); } catch { /* ignore */ }
+    refreshProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [aiConfig, setAiConfig] = useState<AIAssistantConfig>(() => {
     const saved = localStorage.getItem('hv_ai_config');
@@ -106,15 +157,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
-    const saved = localStorage.getItem('hv_audit_logs');
-    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
-  });
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => (import.meta.env.DEV ? INITIAL_AUDIT_LOGS : []));
 
-  const [whatsappConversations, setWhatsappConversations] = useState<WhatsAppConversation[]>(() => {
-    const saved = localStorage.getItem('hv_whatsapp_convs');
-    return saved ? JSON.parse(saved) : INITIAL_WHATSAPP_CONVERSATIONS;
-  });
+  // Demo conversations are for local development only; the live inbox is WhatsApp itself.
+  const [whatsappConversations, setWhatsappConversations] = useState<WhatsAppConversation[]>(() => (import.meta.env.DEV ? INITIAL_WHATSAPP_CONVERSATIONS : []));
 
   const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppConfig>(() => {
     const saved = localStorage.getItem('hv_whatsapp_config');
@@ -122,8 +168,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Local storage synchronizations
-  useEffect(() => { localStorage.setItem('hv_products', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('hv_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('hv_cart', JSON.stringify(cart)); }, [cart]);
   useEffect(() => { localStorage.setItem('hv_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   useEffect(() => {
@@ -150,9 +194,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Only on first load of a saved session
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  useEffect(() => { localStorage.setItem('hv_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
-  useEffect(() => { localStorage.setItem('hv_whatsapp_convs', JSON.stringify(whatsappConversations)); }, [whatsappConversations]);
   useEffect(() => { localStorage.setItem('hv_whatsapp_config', JSON.stringify(whatsappConfig)); }, [whatsappConfig]);
+
+  const refreshOrders = async (): Promise<void> => {
+    if (!getAdminToken()) return;
+    try {
+      const data = await adminFetch('/api/admin/orders');
+      setOrders(data.orders || []);
+      const audit = await adminFetch('/api/admin/audit');
+      setAuditLogs((audit.logs || []).map((l: any) => ({ ...l, timestamp: String(l.timestamp).replace('T', ' ').substring(0, 19), ipAddress: '' })));
+    } catch { /* leaves the previous list in place */ }
+  };
+
+  useEffect(() => {
+    if (adminUser) refreshOrders();
+    else setOrders([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminUser?.email]);
 
   const formatPrice = (amount: number): string => {
     return '₦ ' + amount.toLocaleString('en-NG');
@@ -239,108 +297,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Order management
   const createOrder = async (orderData: Omit<Order, 'id' | 'orderNumber' | 'date' | 'status'>): Promise<Order> => {
-    // Try the server (D1) first so orders are persisted and trackable across devices.
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: orderData.customerName,
-          customerEmail: orderData.customerEmail,
-          customerPhone: orderData.customerPhone,
-          deliveryAddress: orderData.deliveryAddress,
-          items: orderData.items,
-          isGuest: orderData.isGuest,
-          paymentMethod: orderData.paymentMethod,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json() as any;
-        const newOrder: Order = {
-          ...orderData,
-          id: `ord-${Date.now()}`,
-          orderNumber: data.orderNumber,
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          status: 'Pending Payment',
-          paymentStatus: 'Unpaid',
-          trackingSecret: data.trackingSecret,
-          sourcingNotes: [
-            { date: new Date().toLocaleString(), message: 'Pre-order created. Initial product procurement funds pending confirmation.' }
-          ],
-        };
-        setOrders(prev => [newOrder, ...prev]);
-        logAuditEvent('CREATE_ORDER', newOrder.orderNumber, `Order placed by ${orderData.customerName} for ${formatPrice(orderData.totalAmount)}`);
-        clearCart();
-        return newOrder;
-      }
-    } catch {
-      // Fall through to local generation when the API is unavailable (local dev / offline).
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName: orderData.customerName,
+        customerEmail: orderData.customerEmail,
+        customerPhone: orderData.customerPhone,
+        deliveryAddress: orderData.deliveryAddress,
+        // Only ids, options and quantities are sent; the server applies the real prices.
+        items: orderData.items.map((it) => ({ productId: it.productId, quantity: it.quantity, selectedVariants: it.selectedVariants })),
+        isGuest: true,
+        paymentMethod: orderData.paymentMethod,
+      }),
+    });
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) {
+      throw new Error(data.error || 'We could not place your order. Please try again or contact us on WhatsApp.');
     }
-
-    // Stateless fallback (no DB) — keeps the app usable in local dev.
-    const newOrderNumber = `#HV00${124 + orders.length}`;
     const newOrder: Order = {
       ...orderData,
       id: `ord-${Date.now()}`,
-      orderNumber: newOrderNumber,
+      orderNumber: data.orderNumber,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: 'Pending Payment',
       paymentStatus: 'Unpaid',
-      trackingSecret: Math.random().toString(36).substring(2, 10),
+      trackingSecret: data.trackingSecret,
+      items: Array.isArray(data.items) ? data.items : orderData.items,
+      subtotal: typeof data.subtotal === 'number' ? data.subtotal : orderData.subtotal,
+      totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount : orderData.totalAmount,
       sourcingNotes: [
-        { date: new Date().toLocaleString(), message: 'Pre-order created. Initial product procurement funds pending confirmation.' }
-      ]
+        { date: new Date().toLocaleString(), message: 'Order created. Initial product procurement funds pending confirmation.' }
+      ],
     };
-    setOrders(prev => [newOrder, ...prev]);
-    logAuditEvent('CREATE_ORDER', newOrderNumber, `Order placed by ${orderData.customerName} for ${formatPrice(orderData.totalAmount)}`);
     clearCart();
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus, note?: string) => {
-    setOrders(prev => prev.map(order => {
-      if (order.id === orderId) {
-        const notes = order.sourcingNotes || [];
-        const updatedNotes = note ? [
-          ...notes,
-          { date: new Date().toLocaleString(), message: note }
-        ] : notes;
-        const paymentStatus = (status === 'Payment Confirmed' || status === 'Purchased from Supplier' || status === 'In Transit' || status === 'Delivered') 
-          ? 'Paid' 
-          : status === 'Refunded' ? 'Refunded' : order.paymentStatus || 'Unpaid';
-        
-        logAuditEvent('UPDATE_ORDER_STATUS', order.orderNumber, `Status set to "${status}". Note: ${note || 'None'}`);
-        return {
-          ...order,
-          status,
-          paymentStatus,
-          sourcingNotes: updatedNotes
-        };
-      }
-      return order;
-    }));
+  const updateOrderStatus = async (orderId: string, status: OrderStatus, note?: string): Promise<void> => {
+    const current = orders.find((o) => o.id === orderId);
+    const paymentStatus = (status === 'Payment Confirmed' || status === 'Purchased from Supplier' || status === 'In Transit' || status === 'Delivered')
+      ? 'Paid'
+      : status === 'Refunded' ? 'Refunded' : current?.paymentStatus || 'Unpaid';
+    const data = await adminFetch(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, paymentStatus, note }),
+    });
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
   };
 
-  // Product management
-  const addProduct = (product: Omit<Product, 'id'>): Product => {
-    const newProduct: Product = {
-      ...product,
-      id: `prod-${Date.now()}`
-    };
-    setProducts(prev => [newProduct, ...prev]);
-    logAuditEvent('CREATE_PRODUCT', newProduct.sku, `Added product ${newProduct.name} at ${formatPrice(newProduct.price)}`);
-    return newProduct;
+  // Product management (saved to the server; images go to R2)
+  const uploadProductImage = async (file: File): Promise<string> => {
+    const data = await adminFetch('/api/admin/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': file.type },
+      body: file,
+    });
+    return data.url as string;
   };
 
-  const updateProduct = (updated: Product) => {
-    setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-    logAuditEvent('UPDATE_PRODUCT', updated.sku, `Modified product details for ${updated.name}`);
+  const addProduct = async (product: Omit<Product, 'id'>): Promise<Product> => {
+    const data = await adminFetch('/api/admin/products', { method: 'POST', body: JSON.stringify(product) });
+    setProducts((prev) => [data.product, ...prev]);
+    return data.product as Product;
   };
 
-  const deleteProduct = (productId: string) => {
-    const p = products.find(prod => prod.id === productId);
-    setProducts(prev => prev.filter(item => item.id !== productId));
-    if (p) logAuditEvent('DELETE_PRODUCT', p.sku, `Removed product ${p.name}`);
+  const updateProduct = async (updated: Product): Promise<void> => {
+    const data = await adminFetch(`/api/admin/products/${encodeURIComponent(updated.id)}`, { method: 'PUT', body: JSON.stringify(updated) });
+    setProducts((prev) => prev.map((p) => (p.id === updated.id ? data.product : p)));
+  };
+
+  const deleteProduct = async (productId: string): Promise<void> => {
+    await adminFetch(`/api/admin/products/${encodeURIComponent(productId)}`, { method: 'DELETE' });
+    setProducts((prev) => prev.filter((item) => item.id !== productId));
   };
 
   // Admin Authentication & Access
@@ -462,6 +491,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addProduct,
         updateProduct,
         deleteProduct,
+        uploadProductImage,
+        productsLoading,
+        productsError,
+        refreshProducts,
+        refreshOrders,
         adminLogin,
         adminLogout,
         logAuditEvent,

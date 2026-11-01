@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../mockData';
 
 export const HomePage: React.FC = () => {
-  const { products } = useApp();
+  const { products, productsLoading } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Hero banners matching reference visual identity
@@ -287,11 +287,17 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Product Grid */}
+        {featuredProducts.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-10" role="status">
+            {productsLoading ? 'Loading products…' : 'New products are being added. Check back soon, or send us a request to source an item for you.'}
+          </p>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-5">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        )}
       </section>
 
       {/* 5. BLUE CTA MIDDLE BANNER (Matches mockup bottom promo banner) */}
@@ -401,6 +407,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 7. TRENDING PRODUCTS */}
+      {trendingProducts.length > 0 && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -423,6 +430,7 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* 8. MORE PRODUCTS FROM OTHER CATEGORIES */}
       {moreProducts.length > 0 && (

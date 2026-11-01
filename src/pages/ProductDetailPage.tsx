@@ -25,7 +25,7 @@ import { buildProductWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessag
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { products, formatPrice, addToCart, wishlist, toggleWishlist } = useApp();
+  const { products, productsLoading, formatPrice, addToCart, wishlist, toggleWishlist } = useApp();
 
   const product = products.find((p) => p.id === id);
 
@@ -46,9 +46,23 @@ export const ProductDetailPage: React.FC = () => {
     return initial;
   });
   const [quantity, setQuantity] = useState(1);
+
+  // Products arrive from the server after the first render, so (re)initialise when this product loads
+  useEffect(() => {
+    if (!product) return;
+    setSelectedImage(product.primaryImage || product.images?.[0] || '');
+    const initial: Record<string, string> = {};
+    (product.variants || []).forEach((v) => { if (v.options.length > 0) initial[v.name] = v.options[0]; });
+    setSelectedVariants(initial);
+    setQuantity(Math.max(1, product.minOrderQuantity || 1));
+  }, [product?.id]);
   const [activeTab, setActiveTab] = useState<'description' | 'specifications' | 'shipping' | 'reviews'>('description');
   const [addedToast, setAddedToast] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  if (!product && productsLoading) {
+    return <div className="max-w-4xl mx-auto px-4 py-20 text-center text-sm text-slate-500" role="status">Loading product…</div>;
+  }
 
   if (!product) {
     return (
