@@ -42,7 +42,7 @@ export const Logo: React.FC<LogoProps> = ({
             Helen’s<span className={isWhite ? 'text-white/95' : 'text-[#191919]'}> Varieties</span>
           </span>
           <span className={`font-semibold tracking-wider uppercase ${dimensions.sub} ${isWhite ? 'text-white/70' : 'text-slate-500'}`}>
-            Venture • Pre-Order
+            Venture
           </span>
         </div>
       )}

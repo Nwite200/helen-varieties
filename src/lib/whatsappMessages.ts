@@ -16,7 +16,7 @@ export const variantLabel = (selectedVariants: Record<string, string>): string =
     .join(', ');
 
 /**
- * Builds a prefilled WhatsApp message for a product enquiry / pre-order request.
+ * Builds a prefilled WhatsApp message for a product enquiry / order request.
  * Never includes passwords, payment credentials, or sensitive personal data.
  */
 export function buildProductWhatsAppMessage({
@@ -34,7 +34,7 @@ export function buildProductWhatsAppMessage({
   const unitTotal = product.price * quantity;
   const productUrl = `${baseUrl}/product/${product.id}`;
   const lines = [
-    `Hello Helen's Varieties Venture. I am interested in pre-ordering ${product.name}.`,
+    `Hello Helen's Varieties Venture. I am interested in ordering ${product.name}.`,
     variants ? `Variant: ${variants}.` : '',
     `Quantity: ${quantity}.`,
     `Product price shown: ${formatMoney(unitTotal)}.`,
@@ -60,7 +60,7 @@ export function buildCartWhatsAppMessage({
 }): string {
   const total = cartItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
   const lines = [
-    `Hello Helen's Varieties Venture. I would like to place a pre-order for the following items:`,
+    `Hello Helen's Varieties Venture. I would like to place an order for the following items:`,
     '',
     ...cartItems.map((item) => {
       const variants = variantLabel(item.selectedVariants);

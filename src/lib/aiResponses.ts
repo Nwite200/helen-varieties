@@ -10,7 +10,7 @@ export const SHIPPING_DISCLAIMER =
   'Additional charges are communicated according to the order’s sourcing and delivery arrangements.';
 
 export const PRE_ORDER_EXPLANATION =
-  'Pre-ordering means we source the item directly from verified 1688 manufacturers and global suppliers after you place your order. ' +
+  'Ordering with us means we source the item directly from verified manufacturers and global suppliers after you place and pay for your order. ' +
   'We inspect the product, arrange air or sea cargo freight to Nigeria, clear customs, and deliver to your doorstep (or our Lagos warehouse for pickup). ' +
   'Sourcing typically takes 10–15 working days by air cargo or 35–45 days by sea cargo, depending on the item.';
 
@@ -95,7 +95,7 @@ export function generateAIReply({
   if (m.includes('pre-order') || m.includes('preorder') || m.includes('how does it work') || m.includes('sourcing')) {
     return {
       text: `${PRE_ORDER_EXPLANATION}\n\nTo get started: pick a product, choose variant and quantity, then check out as a guest or registered customer. You'll need a name and at least an email address or phone number.\n\n${SHIPPING_DISCLAIMER}`,
-      links: [{ text: 'Browse products', url: '/shop' }, { text: 'Pre-Order Info', url: '/pre-order' }],
+      links: [{ text: 'Browse products', url: '/shop' }, { text: 'How Ordering Works', url: '/how-it-works' }],
       actions: ['Find a Product', 'Contact support'],
     };
   }
@@ -104,7 +104,7 @@ export function generateAIReply({
   if (m.includes('shipping') || m.includes('delivery') || m.includes('freight') || m.includes('customs')) {
     return {
       text: `We ship via air cargo freight (10–15 working days after factory dispatch) or sea cargo freight (35–45 days for bulky items), then local delivery in Nigeria via GIG Logistics or pickup at our Lagos warehouse.\n\n${SHIPPING_DISCLAIMER}`,
-      links: [{ text: 'Pre-Order & Shipping Info', url: '/pre-order' }],
+      links: [{ text: 'Ordering & Shipping Info', url: '/how-it-works' }],
       actions: ['Contact support'],
     };
   }
@@ -169,7 +169,7 @@ export function generateAIReply({
 
     const top = results.slice(0, 4);
     if (top.length > 0) {
-      const list = top.map((p) => `• ${p.name} — ${formatPrice(p.price)}${p.isPreOrder ? ' (pre-order)' : ''}`).join('\n');
+      const list = top.map((p) => `• ${p.name} — ${formatPrice(p.price)}${p.isPreOrder ? ' ' : ''}`).join('\n');
       return {
         text: `${note || 'Here are some options:'}\n${list}\n\nWant details on any of these? Tell me the name and I'll show specifications and variants.\n${SHIPPING_DISCLAIMER}`,
         links: top.map((p) => ({ text: `View ${p.name}`, url: `/product/${p.id}` })),
@@ -187,7 +187,7 @@ export function generateAIReply({
   if (m.includes('cart') || m.includes('basket')) {
     if (cart.length === 0) {
       return {
-        text: 'Your cart is currently empty. Browse our catalogue to add items for pre-order.',
+        text: 'Your cart is currently empty. Browse our catalogue to add items to order.',
         links: [{ text: 'Browse Products', url: '/shop' }],
         actions: ['Find a Product'],
       };
@@ -204,7 +204,7 @@ export function generateAIReply({
   // --- General fallback ---
   const namePart = user?.name ? `, ${user.name}` : '';
   return {
-    text: `Hello${namePart}! I'm your AI shopping assistant at Helen's Varieties Venture. I can help you find products, check prices and specifications, explain pre-orders and shipping, track orders, or connect you with our support team on WhatsApp (${WHATSAPP_PHONE}).\n\nWhat are you looking for today?`,
+    text: `Hello${namePart}! I'm your AI shopping assistant at Helen's Varieties Venture. I can help you find products, check prices and specifications, explain ordering and shipping, track orders, or connect you with our support team on WhatsApp (${WHATSAPP_PHONE}).\n\nWhat are you looking for today?`,
     links: [
       { text: 'Browse Products', url: '/shop' },
       { text: 'Track Order', url: '/track' },

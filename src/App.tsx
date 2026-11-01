@@ -56,8 +56,9 @@ function AppInner() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/track" element={<TrackOrderPage />} />
             <Route path="/invoice/:orderNumber" element={<InvoicePage />} />
-            <Route path="/pre-order" element={<PreOrderInfoPage />} />
-            <Route path="/about" element={<PreOrderInfoPage />} />
+            <Route path="/how-it-works" element={<PreOrderInfoPage />} />
+            <Route path="/pre-order" element={<Navigate to="/how-it-works" replace />} />
+            <Route path="/about" element={<Navigate to="/how-it-works" replace />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/wishlist" element={<ShopPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />

@@ -18,24 +18,9 @@ import { buildCartWhatsAppMessage, WHATSAPP_URL } from '../lib/whatsappMessages'
 export const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateCartQuantity, formatPrice } = useApp();
   const navigate = useNavigate();
-  const [couponCode, setCouponCode] = useState('');
-  const [couponApplied, setCouponApplied] = useState(false);
-  const [couponError, setCouponError] = useState('');
 
   const subtotal = cart.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);
-  const discount = couponApplied ? Math.round(subtotal * 0.05) : 0;
-  const total = subtotal - discount;
-
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (couponCode.toUpperCase() === 'HELEN1688') {
-      setCouponApplied(true);
-      setCouponError('');
-    } else {
-      setCouponError('Invalid coupon code. Try "HELEN1688" for 5% launch discount.');
-      setCouponApplied(false);
-    }
-  };
+  const total = subtotal;
 
   if (cart.length === 0) {
     return (
@@ -43,9 +28,9 @@ export const CartPage: React.FC = () => {
         <div className="w-16 h-16 rounded-full bg-blue-50 text-[#0070DC] flex items-center justify-center mx-auto">
           <ShoppingBag className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">Your Pre-Order Cart is Empty</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Your Cart is Empty</h2>
         <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
-          Discover high-demand products directly sourced from 1688 manufacturers and place your pre-order today.
+          Discover high-demand products sourced from trusted manufacturers and place your order today.
         </p>
         <Link
           to="/shop"
@@ -66,7 +51,7 @@ export const CartPage: React.FC = () => {
             Your Cart ({cart.reduce((s, i) => s + i.quantity, 0)})
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Review your selected pre-order items before proceeding to checkout.
+            Review your selected items before proceeding to checkout.
           </p>
         </div>
         <Link
@@ -113,7 +98,7 @@ export const CartPage: React.FC = () => {
                       </p>
                     )}
                     <span className="inline-block text-[10px] bg-blue-50 text-[#0070DC] font-semibold px-2 py-0.5 rounded">
-                      Pre-Order Sourcing
+                      Sourced for you
                     </span>
                   </div>
                 </div>
@@ -174,13 +159,6 @@ export const CartPage: React.FC = () => {
               <span className="font-semibold text-amber-600">Not included</span>
             </div>
 
-            {couponApplied && (
-              <div className="flex justify-between text-emerald-600 font-semibold">
-                <span>Promo Discount (5%)</span>
-                <span>-{formatPrice(discount)}</span>
-              </div>
-            )}
-
             <div className="pt-3 border-t border-slate-100 flex justify-between items-baseline">
               <span className="text-sm font-extrabold text-slate-900">Total</span>
               <span className="text-xl font-extrabold text-[#0070DC]">
@@ -188,27 +166,6 @@ export const CartPage: React.FC = () => {
               </span>
             </div>
           </div>
-
-          {/* Coupon Code Input */}
-          <form onSubmit={handleApplyCoupon} className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Promo Code (HELEN1688)"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="flex-1 text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0070DC]"
-              />
-              <button
-                type="submit"
-                className="px-3.5 py-2 bg-slate-800 hover:bg-black text-white text-xs font-bold rounded-lg transition"
-              >
-                Apply
-              </button>
-            </div>
-            {couponError && <p className="text-[11px] text-red-500">{couponError}</p>}
-            {couponApplied && <p className="text-[11px] text-emerald-600 font-semibold">Coupon HELEN1688 applied!</p>}
-          </form>
 
           {/* Prominent Red Disclaimer Box matching mockup */}
           <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-[11px] text-red-700 leading-relaxed font-medium">
@@ -244,7 +201,7 @@ export const CartPage: React.FC = () => {
 
           <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Secure 256-bit Encrypted Pre-Order</span>
+            <span>Secure Ordering</span>
           </div>
         </div>
       </div>

@@ -47,6 +47,7 @@ export const AdminAppLayout: React.FC = () => {
     escalateWhatsAppConversation,
     resolveWhatsAppEscalation,
     updateOrderStatus,
+    uploadProductImage,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -154,7 +155,9 @@ export const AdminAppLayout: React.FC = () => {
     setPSku(p.sku);
     setPPrice(p.price);
     setPCategory(p.category);
-    setPImages(p.images && p.images.length ? p.images : [p.primaryImage]);
+    setPImages(p.images && p.images.length ? p.images : p.primaryImage ? [p.primaryImage] : []);
+    setPDescription(p.description || '');
+    setPFormError('');
     setShowAddProductModal(true);
   };
 
@@ -164,31 +167,41 @@ export const AdminAppLayout: React.FC = () => {
     setPSku('HV-SRC-' + Math.floor(100 + Math.random() * 900));
     setPPrice(18500);
     setPCategory('Electronics & Gadgets');
-    setPImages(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
+    setPImages([]);
+    setPDescription('');
     setPImageUrlInput('');
     setPFormError('');
+    setSaving(false);
+    setUploading(false);
   };
   const [pName, setPName] = useState('');
   const [pCategory, setPCategory] = useState('Electronics & Gadgets');
   const [pPrice, setPPrice] = useState(18500);
   const [pSku, setPSku] = useState('HV-SRC-' + Math.floor(100 + Math.random() * 900));
-  const [pImages, setPImages] = useState<string[]>(['https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80']);
+  const [pImages, setPImages] = useState<string[]>([]);
+  const [pDescription, setPDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [opError, setOpError] = useState('');
   const [pImageUrlInput, setPImageUrlInput] = useState('');
   const [pFormError, setPFormError] = useState('');
 
-  const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setPImages((prev) => [...prev, reader.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+  const handleImageFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
     e.target.value = '';
+    if (!files.length) return;
+    setPFormError('');
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const url = await uploadProductImage(file);
+        setPImages((prev) => [...prev, url]);
+      }
+    } catch (err: any) {
+      setPFormError(err?.message || 'Image upload failed.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const addImageFromUrl = () => {
@@ -219,53 +232,76 @@ export const AdminAppLayout: React.FC = () => {
 
   const activeConv = whatsappConversations.find(c => c.id === selectedConvId) || whatsappConversations[0];
 
-  const handleUpdateStatus = (e: React.FormEvent) => {
+  const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingOrderId) {
-      updateOrderStatus(editingOrderId, newStatus, statusNote);
+    if (!editingOrderId) return;
+    setOpError('');
+    try {
+      await updateOrderStatus(editingOrderId, newStatus, statusNote);
       setEditingOrderId(null);
       setStatusNote('');
+    } catch (err: any) {
+      setOpError(err?.message || 'Could not update the order.');
     }
   };
 
-  const handleCreateProduct = (e: React.FormEvent) => {
+  const handleDeleteProduct = async (p: Product) => {
+    if (!window.confirm(`Delete "${p.name}" from the catalogue? This cannot be undone.`)) return;
+    setOpError('');
+    try {
+      await deleteProduct(p.id);
+    } catch (err: any) {
+      setOpError(err?.message || 'Could not delete the product.');
+    }
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setPFormError('');
     if (!pName.trim()) { setPFormError('Product name is required.'); return; }
     if (!(Number(pPrice) > 0)) { setPFormError('Price must be greater than 0.'); return; }
     if (pImages.length === 0) { setPFormError('At least one product image is required.'); return; }
-    const primaryImage = pImages[0] || 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80';
-    const images = pImages.length ? pImages : [primaryImage];
-    if (editingProduct) {
-      updateProduct({
-        ...editingProduct,
-        sku: pSku,
-        name: pName,
-        category: pCategory,
-        price: Number(pPrice),
-        primaryImage,
-        images,
-      });
-    } else {
-      addProduct({
-        sku: pSku,
-        name: pName,
-        category: pCategory,
-        description: 'Verified 1688 wholesale product sourced directly from Guangzhou.',
-        price: Number(pPrice),
-        rating: 5.0,
-        reviewsCount: 1,
-        primaryImage,
-        images,
-        variants: [{ name: 'Option', options: ['Default'] }],
-        specifications: { 'Procurement Origin': '1688 Verified Supplier' },
-        isFeatured: true,
-        isPreOrder: true,
-        sourcingTimeframe: '10 - 15 working days'
-      });
+    if (uploading) { setPFormError('Please wait for the image upload to finish.'); return; }
+    const primaryImage = pImages[0];
+    setSaving(true);
+    try {
+      if (editingProduct) {
+        await updateProduct({
+          ...editingProduct,
+          sku: pSku,
+          name: pName,
+          category: pCategory,
+          description: pDescription,
+          price: Number(pPrice),
+          primaryImage,
+          images: pImages,
+        });
+      } else {
+        await addProduct({
+          sku: pSku,
+          name: pName,
+          category: pCategory,
+          description: pDescription || 'Sourced for you from verified suppliers.',
+          price: Number(pPrice),
+          supplierPriceRMB: 0,
+          rating: 5.0,
+          reviewsCount: 0,
+          primaryImage,
+          images: pImages,
+          variants: [],
+          specifications: {},
+          isFeatured: true,
+          isPreOrder: true,
+          sourcingTimeframe: '',
+        } as any);
+      }
+      setShowAddProductModal(false);
+      resetProductForm();
+    } catch (err: any) {
+      setPFormError(err?.message || 'Could not save the product. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    setShowAddProductModal(false);
-    resetProductForm();
   };
 
   const handleSendAdminReply = (e: React.FormEvent) => {
@@ -280,7 +316,7 @@ export const AdminAppLayout: React.FC = () => {
     { label: 'Products', path: '/admin/products', icon: Package, id: 'products', count: products.length },
     { label: 'Categories', path: '/admin/categories', icon: Layers, id: 'categories', count: CATEGORIES.length },
     { label: 'All Orders', path: '/admin/orders', icon: ShoppingCart, id: 'orders', count: totalOrders },
-    { label: 'Pre-Orders Queue', path: '/admin/pre-orders', icon: Truck, id: 'pre-orders', count: ordersAwaitingSourcing },
+    { label: 'Sourcing Queue', path: '/admin/pre-orders', icon: Truck, id: 'pre-orders', count: ordersAwaitingSourcing },
     { label: 'Customers', path: '/admin/customers', icon: Users, id: 'customers' },
     { label: 'Payments', path: '/admin/payments', icon: CreditCard, id: 'payments' },
     { label: 'Shipping Rules', path: '/admin/shipping', icon: Truck, id: 'shipping' },
@@ -369,7 +405,7 @@ export const AdminAppLayout: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Operations Command Center</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Live monitoring of 1688 supplier orders, payments, and WhatsApp inquiries.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Live monitoring of orders, payments, and WhatsApp inquiries.</p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -391,7 +427,7 @@ export const AdminAppLayout: React.FC = () => {
               </div>
 
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-                <span className="text-xs text-slate-500 font-semibold">New Pre-Orders</span>
+                <span className="text-xs text-slate-500 font-semibold">New Orders</span>
                 <div className="text-2xl font-extrabold text-amber-600 mt-1">{newPreOrders}</div>
                 <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded">Pending Auth</span>
               </div>
@@ -574,7 +610,7 @@ export const AdminAppLayout: React.FC = () => {
                         </h3>
                         {activeConv.associatedOrderNumber && (
                           <span className="text-[11px] text-[#0070DC] font-bold">
-                            Associated Pre-Order: {activeConv.associatedOrderNumber}
+                            Associated Order: {activeConv.associatedOrderNumber}
                           </span>
                         )}
                       </div>
@@ -650,10 +686,11 @@ export const AdminAppLayout: React.FC = () => {
         {/* 3. PRODUCTS MANAGEMENT */}
         {activeSection === 'products' && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+            {opError && <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-3 py-2">{opError}</div>}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900">Sourcing Catalogue ({products.length})</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Manage 1688 wholesale items, variants, and Nigerian customer pricing.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Manage products, photos, and Nigerian customer pricing.</p>
               </div>
 
               <button
@@ -683,7 +720,7 @@ export const AdminAppLayout: React.FC = () => {
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => deleteProduct(p.id)}
+                    onClick={() => handleDeleteProduct(p)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-xl"
                     title="Delete product"
                   >
@@ -695,15 +732,15 @@ export const AdminAppLayout: React.FC = () => {
           </div>
         )}
 
-        {/* 4. ORDERS & PRE-ORDERS */}
+        {/* 4. ORDERS */}
         {(activeSection === 'orders' || activeSection === 'pre-orders') && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900">
-                  {activeSection === 'orders' ? 'All Orders & Transactions' : 'Pre-Order Procurement Queue'}
+                  {activeSection === 'orders' ? 'All Orders & Transactions' : 'Orders Awaiting Sourcing'}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">Full customer pre-order lifecycle management.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Full customer order lifecycle management.</p>
               </div>
             </div>
 
@@ -1156,7 +1193,7 @@ export const AdminAppLayout: React.FC = () => {
                 <input type="text" readOnly value="07032583937 (+234 703 258 3937)" className="w-full p-2.5 bg-slate-50 border rounded-xl" />
               </div>
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Guangzhou Benchmark Exchange Rate</label>
+                <label className="block font-bold text-slate-700 mb-1">Benchmark Exchange Rate</label>
                 <input type="text" readOnly value="¥1 RMB = ₦220.00" className="w-full p-2.5 bg-slate-50 border rounded-xl" />
               </div>
             </div>
@@ -1182,7 +1219,8 @@ export const AdminAppLayout: React.FC = () => {
       {editingOrderId && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">Update Pre-Order Sourcing Status</h3>
+            <h3 className="text-base font-extrabold text-slate-900">Update Sourced for you Status</h3>
+            {opError && <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl px-3 py-2">{opError}</div>}
             <form onSubmit={handleUpdateStatus} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">New Order Status</label>
@@ -1209,7 +1247,7 @@ export const AdminAppLayout: React.FC = () => {
                 <label className="block font-bold text-slate-700 mb-1">Customer Milestone Log Message</label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Cleared Guangzhou customs. Air freight cargo departed for Lagos MMA airport."
+                  placeholder="e.g. Cleared customs. Air freight cargo departed for Lagos MMA airport."
                   value={statusNote}
                   onChange={(e) => setStatusNote(e.target.value)}
                   className="w-full p-2.5 border rounded-xl"
@@ -1240,7 +1278,7 @@ export const AdminAppLayout: React.FC = () => {
       {showAddProductModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
-            <h3 className="text-base font-extrabold text-slate-900">{editingProduct ? 'Edit Product' : 'Add 1688 Sourced Product'}</h3>
+            <h3 className="text-base font-extrabold text-slate-900">{editingProduct ? 'Edit Product' : 'Add Product'}</h3>
             <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Product Title</label>
@@ -1256,7 +1294,7 @@ export const AdminAppLayout: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Pre-Order Price (NGN)</label>
+                  <label className="block font-bold text-slate-700 mb-1">Price (NGN)</label>
                   <input
                     type="number"
                     required
@@ -1277,6 +1315,18 @@ export const AdminAppLayout: React.FC = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  maxLength={4000}
+                  placeholder="What the product is, key features, sizes, materials…"
+                  value={pDescription}
+                  onChange={(e) => setPDescription(e.target.value)}
+                  className="w-full p-2.5 border rounded-xl"
+                />
               </div>
 
               <div>
@@ -1330,6 +1380,7 @@ export const AdminAppLayout: React.FC = () => {
                     </div>
                   )}
                 </div>
+                {uploading && <p className="text-[10px] text-[#0070DC] font-bold mt-1">Uploading image…</p>}
                 <p className="text-[10px] text-slate-500 mt-1">First image is the primary thumbnail. Add more for the product gallery.</p>
               </div>
 
@@ -1348,9 +1399,10 @@ export const AdminAppLayout: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#0070DC] text-white font-bold rounded-xl"
+                  disabled={saving || uploading}
+                  className="px-4 py-2 bg-[#0070DC] text-white font-bold rounded-xl disabled:opacity-50"
                 >
-                  {editingProduct ? 'Save Changes' : 'Publish to Catalogue'}
+                  {saving ? 'Saving…' : editingProduct ? 'Save Changes' : 'Publish to Catalogue'}
                 </button>
               </div>
             </form>

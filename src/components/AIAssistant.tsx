@@ -151,7 +151,7 @@ export const AIAssistant: React.FC = () => {
       const mapped: Record<string, string> = {
         'Find a Product': 'Help me find a product in the catalogue',
         'Browse Categories': 'Show me product categories',
-        'Help Me Pre-Order': 'How does pre-order work?',
+        'Help Me Order': 'How does ordering work?',
         'Track My Order': 'How do I track my order?',
         'Explain Shipping': 'Explain shipping charges and delivery',
         'Contact Support': 'I want to speak with human support on WhatsApp',
@@ -357,7 +357,7 @@ export const AIAssistant: React.FC = () => {
 
   const homeScreen = () => {
     const whatsAppText =
-      `Hello Helen's Varieties Venture. I'd like to order or ask about products via WhatsApp. Please guide me on available items and how to place a pre-order.`;
+      `Hello Helen's Varieties Venture. I'd like to order or ask about products via WhatsApp. Please guide me on available items and how to place an order.`;
     return (
       <div className="flex flex-col h-full items-center justify-center text-center p-6 space-y-4">
         <div className="relative w-20 h-20 rounded-full bg-[#0070DC] flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
@@ -513,7 +513,7 @@ export const AIAssistant: React.FC = () => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask about products, prices, pre-orders…"
+            placeholder="Ask about products, prices, orders…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="flex-1 bg-slate-50 text-xs px-3.5 py-2.5 rounded-xl border border-transparent focus:border-[#0070DC] focus:bg-white focus:outline-none transition"

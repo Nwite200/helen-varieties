@@ -23,7 +23,7 @@ import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../mockData';
 
 export const HomePage: React.FC = () => {
-  const { products } = useApp();
+  const { products, productsLoading } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Hero banners matching reference visual identity
@@ -31,19 +31,19 @@ export const HomePage: React.FC = () => {
     {
       badge: "Welcome To Helen’s Varieties",
       title: "Quality Products from Around the World",
-      subtitle: "Discover amazing products from 1688, China and other global suppliers. Place your pre-order and get them delivered to your doorstep.",
+      subtitle: "Discover amazing products from trusted global suppliers. Place your order and get it delivered to your doorstep.",
       button1: { text: "Shop Products", link: "/shop" },
-      button2: { text: "How Pre-Order Works", link: "/pre-order" },
-      tag: "Pre-Order Now • Get the Best Deals!",
+      button2: { text: "How Ordering Works", link: "/how-it-works" },
+      tag: "Order Now • Get the Best Deals!",
       image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&auto=format&fit=crop&q=80"
     },
     {
       badge: "Direct Factory Procurement",
-      title: "Wholesale 1688 Pricing Without The Hassle",
-      subtitle: "We handle supplier negotiation, quality inspection at Guangzhou consolidation warehouses, international customs, and local dispatch.",
-      button1: { text: "Explore Pre-Orders", link: "/shop" },
+      title: "Wholesale Pricing Without The Hassle",
+      subtitle: "We handle supplier negotiation, quality inspection before shipping, international customs, and local dispatch.",
+      button1: { text: "Shop Now", link: "/shop" },
       button2: { text: "Track An Order", link: "/track" },
-      tag: "Verified 1688 Gold Suppliers",
+      tag: "Verified Suppliers",
       image: "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=1200&auto=format&fit=crop&q=80"
     },
     {
@@ -96,7 +96,7 @@ export const HomePage: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-white/95">
                   <Globe2 className="w-4 h-4 text-amber-300 flex-shrink-0" />
-                  <span>Global Sourcing (1688 & more)</span>
+                  <span>Global Sourcing</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs font-semibold text-white/95">
                   <ShieldCheck className="w-4 h-4 text-emerald-300 flex-shrink-0" />
@@ -143,7 +143,7 @@ export const HomePage: React.FC = () => {
                     {banners[currentSlide].tag}
                   </div>
                   <p className="text-xs text-slate-200">
-                    Inspected in Guangzhou & safely air-freighted directly to Lagos.
+                    Inspected and safely air-freighted directly to Lagos.
                   </p>
                 </div>
               </div>
@@ -184,8 +184,8 @@ export const HomePage: React.FC = () => {
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-800">Easy Pre-Order Process</h4>
-              <p className="text-xs text-slate-500 mt-1">Choose, submit pre-order payment, and we handle the sourcing & clearance.</p>
+              <h4 className="text-sm font-bold text-slate-800">Easy Ordering Process</h4>
+              <p className="text-xs text-slate-500 mt-1">Choose, place your order and pay, and we handle the sourcing & clearance.</p>
             </div>
           </div>
 
@@ -194,7 +194,7 @@ export const HomePage: React.FC = () => {
               <Globe2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-800">Global Sourcing (1688 & More)</h4>
+              <h4 className="text-sm font-bold text-slate-800">Global Sourcing</h4>
               <p className="text-xs text-slate-500 mt-1">Direct access to wholesale manufacturers at competitive exchange rates.</p>
             </div>
           </div>
@@ -287,11 +287,17 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Product Grid */}
+        {featuredProducts.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-10" role="status">
+            {productsLoading ? 'Loading products…' : 'New products are being added. Check back soon, or send us a request to source an item for you.'}
+          </p>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-5">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        )}
       </section>
 
       {/* 5. BLUE CTA MIDDLE BANNER (Matches mockup bottom promo banner) */}
@@ -303,10 +309,10 @@ export const HomePage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl sm:text-2xl font-extrabold">
-                We source, you pre-order, we deliver.
+                You order and pay, we source and deliver.
               </h3>
               <p className="text-xs sm:text-sm text-blue-100 mt-1">
-                Direct wholesale quality products from 1688, China & global suppliers straight to Nigeria.
+                Direct wholesale quality products from trusted global suppliers, straight to Nigeria.
               </p>
             </div>
           </div>
@@ -333,10 +339,10 @@ export const HomePage: React.FC = () => {
               Transparency Guarantee
             </span>
             <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
-              How International Pre-Ordering Works at Helen’s Varieties
+              How Ordering Works at Helen’s Varieties
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 mt-2">
-              Unlike regular retail stores carrying dead stock, Helen’s Varieties leverages an agile pre-order model. 
+              Unlike regular retail stores carrying dead stock, Helen’s Varieties leverages an agile made-to-order model. 
               We purchase goods directly on your behalf at manufacturing costs, eliminating inflated retail markups.
             </p>
           </div>
@@ -348,9 +354,9 @@ export const HomePage: React.FC = () => {
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#0070DC] flex items-center justify-center font-bold text-sm mb-3">
                 1
               </div>
-              <h4 className="text-sm font-bold text-slate-800">Select & Place Pre-Order</h4>
+              <h4 className="text-sm font-bold text-slate-800">Select & Place Order</h4>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                Choose your desired item variants. Pay the product pre-order cost securely to confirm your procurement ticket.
+                Choose your desired item variants. Pay the product cost by bank transfer to confirm your order.
               </p>
             </div>
 
@@ -359,9 +365,9 @@ export const HomePage: React.FC = () => {
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#0070DC] flex items-center justify-center font-bold text-sm mb-3">
                 2
               </div>
-              <h4 className="text-sm font-bold text-slate-800">Guangzhou Inspection</h4>
+              <h4 className="text-sm font-bold text-slate-800">Quality Inspection</h4>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                Our China sourcing office purchases from verified 1688 factories, checks physical specs, and confirms packaging.
+                Our sourcing team buys from verified suppliers, checks physical specs, and confirms packaging.
               </p>
             </div>
 
@@ -372,7 +378,7 @@ export const HomePage: React.FC = () => {
               </div>
               <h4 className="text-sm font-bold text-slate-800">Cargo Flight / Sea Transit</h4>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                Orders are consolidated into secured air cargo (10-15 working days). Live milestones reflect in your customer portal.
+                Orders are shipped as secured cargo to Lagos. Track live milestones on the Track Order page.
               </p>
             </div>
 
@@ -401,6 +407,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 7. TRENDING PRODUCTS */}
+      {trendingProducts.length > 0 && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -423,6 +430,7 @@ export const HomePage: React.FC = () => {
           ))}
         </div>
       </section>
+      )}
 
       {/* 8. MORE PRODUCTS FROM OTHER CATEGORIES */}
       {moreProducts.length > 0 && (
