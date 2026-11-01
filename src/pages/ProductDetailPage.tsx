@@ -407,7 +407,7 @@ export const ProductDetailPage: React.FC = () => {
                 <h4 className="font-bold text-slate-900">Cargo & Freight Timelines:</h4>
                 <p>• <strong>Air Cargo Freight:</strong> Delivery time is confirmed on WhatsApp once your order is placed.</p>
                 <p>• <strong>Sea Cargo Freight:</strong> 35 - 45 days (recommended for bulky machinery and large furniture).</p>
-                <p>• <strong>Local Nigeria Delivery:</strong> Doorstep dispatch via GIG Logistics or pickup at our Lagos warehouse.</p>
+                <p>• <strong>Local Nigeria Delivery:</strong> Delivery to your address is arranged with you on WhatsApp.</p>
               </div>
             </div>
           )}
